@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Student Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap" rel="stylesheet">
+    <style>
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+            color: white;
+            min-height: 100vh;
+            width: 100vw;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            width: 100vw;
+            margin: 0;
+            padding: 0;
+        }
+
+        .dashboard {
+            background-color: rgba(255, 255, 255, 0.07);
+            padding: 32px 24px;
+            border-radius: 18px;
+            max-width: 400px;
+            width: 95vw;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+            backdrop-filter: blur(10px);
+            text-align: center;
+            margin: 32px auto;
+            transition: box-shadow 0.2s;
+            box-sizing: border-box;
+        }
+
+        h2 {
+            color: #00c6ff;
+            margin-bottom: 18px;
+            font-size: 2rem;
+            word-break: break-word;
+        }
+
+        .info,
+        .message {
+            margin-bottom: 12px;
+            font-size: 1rem;
+            word-break: break-word;
+        }
+
+        .message {
+            min-height: 24px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #b3e0ff;
+            text-align: left;
+        }
+
+        select,
+        button {
+            width: 100%;
+            margin-bottom: 14px;
+            border-radius: 8px;
+            border: none;
+            font-size: 1rem;
+            padding: 12px 10px;
+            box-sizing: border-box;
+            max-width: 100%;
+        }
+
+        select {
+            background: #e6f7ff;
+            color: #222;
+            margin-bottom: 18px;
+            border-radius: 8px;
+            font-size: 1rem;
+            padding: 12px 10px;
+            width: 100%;
+            max-width: 100%;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            box-sizing: border-box;
+        }
+
+        @media (max-width: 600px) {
+            select {
+                font-size: 0.95rem;
+                padding: 10px 8px;
+                max-width: 100%;
+            }
+        }
+
+        .dashboard select:focus {
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+
+
+        button {
+            background: linear-gradient(to right, #00c6ff, #0072ff);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-bottom: 10px;
+        }
+
+        button:hover,
+        button:focus {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 4px 12px rgba(0, 198, 255, 0.18);
+            outline: none;
+        }
+
+        .success {
+            color: #4caf50;
+            margin-top: 10px;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .danger {
+            color: #ff4f4f;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        #attendance-message {
+            margin-top: 10px;
+            font-size: 1rem;
+            min-height: 24px;
+        }
+
+        /* Modal overlay - use flex for perfect centering */
+        #history-modal {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+        }
+
+        #history-modal.active,
+        #history-modal[style*="display: flex"] {
+            display: flex !important;
+        }
+
+        #history-modal>div {
+            background: #fff;
+            color: #222;
+            border-radius: 12px;
+            padding: 24px 16px;
+            width: 100%;
+            max-width: 90%;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+            max-height: 80vh;
+            overflow-y: auto;
+            box-sizing: border-box;
+        }
+
+        #history-modal h3 {
+            margin-top: 0;
+            color: #0072ff;
+            font-size: 1.3rem;
+            text-align: center;
+        }
+
+        #history-modal button {
+            width: auto;
+            background: none;
+            color: #888;
+            font-size: 1.5rem;
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        #history-content table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 1rem;
+        }
+
+        #history-content th,
+        #history-content td {
+            padding: 6px 4px;
+            text-align: center;
+        }
+
+        #history-content th {
+            background: #e6f7ff;
+            color: #0072ff;
+        }
+
+        #history-content tr:nth-child(even) {
+            background: #f4faff;
+        }
+
+        @media (max-width: 600px) {
+            .dashboard {
+                padding: 18px 4vw;
+                max-width: 98vw;
+            }
+
+            #history-modal>div {
+                width: 98vw;
+                padding: 18px 4vw 12px 4vw;
+            }
+
+            h2 {
+                font-size: 1.3rem;
+            }
+
+
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard">
+        <h2 id="studentName">Welcome, Student</h2>
+
+        <div class="info">Role: Student</div>
+        <div id="message" class="message">Checking your location...</div>
+        <div id="locationInfo" class="info"></div>
+
+
+        <label for="slot-select">Select Your Slot</label>
+        <select id="slot-select">
+            <option value="">-- Select Slot --</option>
+            <!-- dynamically loaded slots -->
+        </select>
+
+
+        <button id="mark-attendance-btn" onclick="markAttendance()">Mark Attendance</button>
+        <button onclick="viewAttendanceHistory()">View Attendance History</button>
+        <button onclick="logout()">Logout</button>
+
+
+        <div id="attendance-message" class="message"></div>
+
+        <!-- Attendance History Modal/Section -->
+        <div id="history-modal">
+            <div>
+                <h3 style="margin-top:0; color:#0072ff; font-size:1.3rem;">Attendance History</h3>
+                <button onclick="closeHistory()"
+                    style="position:absolute; top:10px; right:15px; background:none; border:none; font-size:1.5rem; color:#888; cursor:pointer;">&times;</button>
+                <div id="history-content">Loading...</div>
+            </div>
+        </div>
+    </div>
+
+
+</body>
+
+
+<script>
+    //  ========== Geo Locaion =========
+
+    const message = document.getElementById("message");
+    const locationInfo = document.getElementById("locationInfo");
+
+    document.getElementById("studentName").innerText = `Welcome, ${localStorage.getItem("name") || "Student"}`;
+
+    // === LOCATION ONLY SCRIPT ===
+    function showLocation() {
+        if (!("geolocation" in navigator)) {
+            message.innerText = "❌ Geolocation not supported by your browser.";
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const latitude = position.coords.latitude;
+                const longitude = position.coords.longitude;
+
+                locationInfo.innerText = `Latitude: ${latitude.toFixed(5)}, Longitude: ${longitude.toFixed(5)}`;
+                message.innerText = "✅ Location captured successfully!";
+            },
+            (error) => {
+                console.error("❌ Error getting location:", error);
+                message.innerText = "❌ Unable to retrieve location. Please enable location access.";
+            }
+        );
+    }
+
+    document.addEventListener("DOMContentLoaded", showLocation);
+</script>
+
+<script>
+    // ============ Load Slots from Backend ============
+
+    const slotSelect = document.getElementById("slot-select");
+    const token = localStorage.getItem("token");
+
+    const API_BASE_URL = window.location.hostname === 'localhost' 
+        ? 'http://localhost:3000' 
+        : window.location.origin;
+
+    async function loadStudentSlots() {
+        try {
+            const res = await fetch(`${API_BASE_URL}/student/my-slot`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (!res.ok) throw new Error("Failed to fetch slots");
+
+            const data = await res.json();
+            const slots = data.slot || [];
+
+            slotSelect.innerHTML = `<option value="">-- Select Slot --</option>`;
+
+            slots.forEach(slot => {
+                const option = document.createElement("option");
+                option.value = slot;
+                option.textContent = slot;
+                slotSelect.appendChild(option);
+            });
+
+            // ✅ Re-run check after slots are loaded
+            checkIfAllowed();
+
+        } catch (err) {
+            console.error("❌ Error loading student slots:", err);
+            alert("Failed to load slot list. Please re-login if issue persists.");
+        }
+    }
+
+
+    // Run after DOM loads
+    document.addEventListener("DOMContentLoaded", loadStudentSlots);
+</script>
+
+
+<script>
+    function logout() {
+        // Clear storage
+        localStorage.removeItem("token");
+        localStorage.removeItem("name");
+        sessionStorage.clear();
+
+        // redirect options 
+        const loginPaths = [
+            "login.html"
+        ];
+
+        // redirect to the first matching one
+        for (const path of loginPaths) {
+            fetch(path)
+                .then(res => {
+                    if (res.ok) {
+                        window.location.href = path;
+                    }
+                })
+                .catch(() => { });
+        }
+
+        // Fallback: default redirect
+        setTimeout(() => {
+            window.location.href = "login.html";
+        }, 1000);
+    }
+</script>
+
+<script>
+    const markBtn = document.getElementById("mark-attendance-btn");
+
+    async function checkIfAllowed() {
+        const selectedSlot = document.getElementById('slot-select').value;
+        const messageDiv = document.getElementById('attendance-message');
+        messageDiv.textContent = ""; // Clear previous message
+
+        if (!selectedSlot) {
+            showMessage("Please select a slot.", "error");
+            markBtn.disabled = true;
+            return;
+        }
+
+        if (!("geolocation" in navigator)) {
+            showMessage("❌ Geolocation not supported.", "error");
+            markBtn.disabled = true;
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(async (position) => {
+            const latitude = position.coords.latitude;
+            const longitude = position.coords.longitude;
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/student/validate-location`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${localStorage.getItem("token")}`,
+                    },
+                    body: JSON.stringify({ latitude, longitude, slot: selectedSlot }),
+                });
+
+                const data = await res.json();
+
+                if (res.ok && data.allowed) {
+                    showMessage("You are allowed to mark attendance.", "success");
+                    markBtn.disabled = false;
+                } else {
+                    showMessage("You are not allowed to mark attendance.", "error");
+                    markBtn.disabled = true;
+                }
+
+            } catch (err) {
+                showMessage("❌ Error validating attendance permission.", "error");
+                markBtn.disabled = true;
+            }
+        }, (error) => {
+            showMessage("❌ Unable to access your location.", "error");
+            markBtn.disabled = true;
+        });
+    }
+
+    // Re-check allow/deny when slot is changed
+    slotSelect.addEventListener("change", checkIfAllowed);
+</script>
+
+<script>
+
+    // Re-check when slot changes
+    document.getElementById("slot-select")?.addEventListener("change", checkIfAllowed);
+</script>
+
+<script>
+    async function markAttendance() {
+        const selectedSlot = document.getElementById('slot-select').value;
+        if (!selectedSlot) {
+            showMessage("Please select a slot.", "error");
+            return;
+        }
+        navigator.geolocation.getCurrentPosition(async (position) => {
+            const latitude = position.coords.latitude;
+            const longitude = position.coords.longitude;
+
+            // 1. Validate location
+            const locationRes = await fetch(`${API_BASE_URL}/student/validate-location`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({ slot: selectedSlot, latitude, longitude })
+            });
+            const locationData = await locationRes.json();
+
+            if (!locationData.allowed) {
+                showMessage("You are not in the allowed location", "error");
+                return;
+            }
+
+            // 2. Mark attendance
+            const res = await fetch(`${API_BASE_URL}/student/mark-attendance`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({ slot: selectedSlot })
+            });
+            const data = await res.json();
+
+            if (res.ok) {
+                showMessage("Attendance marked successfully!", "success");
+            } else {
+                showMessage(data.message || "Failed to mark attendance", "error");
+            }
+        }, (error) => {
+            showMessage("❌ Unable to access your location.", "error");
+        });
+    }
+
+    function showMessage(msg, type) {
+        const el = document.getElementById('attendance-message');
+        el.textContent = msg;
+        el.style.color = type === "success" ? "green" : "red";
+        el.style.display = "block";
+    }
+
+    // console.log("Selected Slot:", selectedSlot);
+    // console.log("Current Location:", { latitude: currentLatitude, longitude: currentLongitude });
+    console.log("Token:", localStorage.getItem('token'));
+</script>
+
+<script>
+    async function viewAttendanceHistory() {
+        const modal = document.getElementById('history-modal');
+        modal.style.display = 'flex';
+        const content = document.getElementById('history-content');
+        content.innerHTML = "Loading...";
+
+        // Get selected slot
+        const selectedSlot = document.getElementById('slot-select').value;
+
+        try {
+            const res = await fetch(`${API_BASE_URL}/student/attendance-history?slot=${encodeURIComponent(selectedSlot)}`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || "Failed to fetch history");
+
+            if (!data.history || data.history.length === 0) {
+                content.innerHTML = "<p>No attendance records found for this slot.</p>";
+                return;
+            }
+
+            let html = `<table style="width:100%; border-collapse:collapse;">
+                <tr><th>Date</th><th>Status</th></tr>`;
+            data.history.forEach(item => {
+                html += `<tr>
+                    <td>${item.date}</td>
+                    <td style="color:${item.status === 'Present' ? 'green' : 'red'};">${item.status}</td>
+                </tr>`;
+            });
+            html += "</table>";
+            content.innerHTML = html;
+        } catch (err) {
+            content.innerHTML = `<span style="color:red;">${err.message}</span>`;
+        }
+    }
+
+    function closeHistory() {
+        document.getElementById('history-modal').style.display = 'none';
+    }
+</script>
+
+<script>
+    if (!localStorage.getItem('token')) {
+        window.location.href = 'login.html';
+    }
+</script>
+
+
+
+
+
+
+</html>

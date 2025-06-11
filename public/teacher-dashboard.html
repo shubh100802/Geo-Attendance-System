@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Teacher Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+      color: white;
+      padding-left: 70px;
+      transition: padding-left 0.3s ease;
+    }
+
+    .header-bar {
+      width: 100%;
+      text-align: center;
+      background: linear-gradient(to right, #0072ff, #00c6ff);
+      padding: 1px 0;
+      color: white;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      position: sticky;
+      top: 0;
+      z-index: 998;
+      display: none;
+    }
+
+    .header-bar i {
+      margin-right: 10px;
+    }
+
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 70px;
+      background: rgba(255, 255, 255, 0.08);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 20px;
+      backdrop-filter: blur(5px);
+      transition: width 0.3s ease;
+      z-index: 999;
+    }
+
+    .sidebar:hover {
+      width: 180px;
+    }
+
+    .sidebar ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      width: 100%;
+    }
+
+    .sidebar li {
+      display: flex;
+      align-items: center;
+      padding: 15px 10px;
+      cursor: pointer;
+      color: #fff;
+      transition: background 0.2s ease;
+    }
+
+    .sidebar li:hover {
+      background-color: rgba(0, 198, 255, 0.15);
+    }
+
+    .sidebar i {
+      font-size: 18px;
+      margin-right: 10px;
+      min-width: 30px;
+      text-align: center;
+    }
+
+    .sidebar span {
+      white-space: nowrap;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .sidebar:hover span {
+      opacity: 1;
+    }
+
+
+    /* Move content right to make space for sidebar */
+
+    .sidebar:hover~body {
+      padding-left: 180px;
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 60px;
+      }
+
+      .sidebar:hover {
+        width: 160px;
+      }
+
+      body {
+        padding-left: 60px;
+      }
+
+      .sidebar:hover~body {
+        padding-left: 160px;
+      }
+    }
+
+
+    .section {
+      display: none;
+      padding: 30px;
+    }
+
+    .section.active {
+      display: block;
+    }
+
+    input,
+    button,
+    select {
+      padding: 10px;
+      border-radius: 6px;
+      border: none;
+      margin-top: 10px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    button {
+      background: linear-gradient(to right, #00c6ff, #0072ff);
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      box-shadow: 0 5px 10px rgba(0, 198, 255, 0.3);
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: rgba(255, 255, 255, 0.05);
+      padding: 20px;
+      border-radius: 10px;
+      margin-top: 30px;
+    }
+
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<script>
+  const API_BASE_URL = window.location.hostname === 'localhost' 
+    ? 'http://localhost:3000' 
+    : window.location.origin;
+
+  let isLocationCaptured = false;
+
+  // ============ Block access if not logged in ============ 
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const token = localStorage.getItem("token");
+    const role = localStorage.getItem("role");
+
+    if (!token || role !== "teacher") {
+      alert("Unauthorized access. Please log in.");
+      window.location.href = "login.html";
+    }
+
+    // ============ Prevent going back to dashboard after logout ============ 
+
+    window.history.pushState(null, null, window.location.href);
+    window.onpopstate = function () {
+      window.history.go(1);
+    };
+  });
+
+</script>
+
+<body>
+  <!-- ============ Sidebar ============ -->
+
+  <div class="sidebar">
+    <ul>
+      <li onclick="showSection('overview')" title="Dashboard">
+        <i class="fas fa-home"></i>
+        <span>Dashboard</span>
+      </li>
+      <li onclick="showSection('add-student')" title="Add Student">
+        <i class="fas fa-user-plus"></i>
+        <span>Add Student</span>
+      </li>
+      <li onclick="showSection('view-students')" title="View Students">
+        <i class="fas fa-users"></i>
+        <span>View Students</span>
+      </li>
+      <li onclick="showSection('attendance-setup')" title="Attendance Setup">
+        <i class="fas fa-map-marker-alt"></i>
+        <span>Attendance</span>
+      </li>
+      <li onclick="showSection('download')" title="Download Sheet">
+        <i class="fas fa-file-download"></i>
+        <span>Download</span>
+      </li>
+      <li onclick="logout()" title="Logout">
+        <i class="fas fa-sign-out-alt"></i>
+        <span>Logout</span>
+      </li>
+    </ul>
+  </div>
+
+
+  <!-- ============ Overview ============ -->
+
+  <div id="overview" class="section active container">
+    <h3 id="greetingText">Welcome 👩‍🏫</h3>
+    <p>Use the navigation left to manage students and attendance.</p>
+  </div>
+
+
+  <!-- ============ Add Student Section ============ -->
+
+  <div id="add-student" class="section container">
+    <h3>Add Students</h3>
+
+    <form id="addStudentForm">
+      <label>Student Name</label>
+      <input type="text" name="name" required>
+
+      <label>Email (used as username)</label>
+      <input type="email" name="email" required>
+
+      <label>Registration Number (used as password)</label>
+      <input type="text" name="regno" required>
+
+      <label>Slot (e.g., A11+A12)</label>
+      <input type="text" name="slot" placeholder="e.g., A11+A12" required>
+
+      <button type="submit">Add Student</button>
+    </form>
+
+
+    <hr style="margin: 30px 0; border: 1px solid #ffffff22;">
+
+    <label>Upload Excel (.xlsx) File</label>
+    <input type="file" accept=".xlsx" id="excelFileInput" />
+    <button onclick="uploadExcel()">Upload Excel</button>
+
+  </div>
+
+
+  <!-- ============ View Student ============ -->
+
+  <div id="view-students" class="section container">
+    <h3>All Students</h3>
+
+    <label for="slotFilter">Filter by Slot</label>
+    <select id="slotFilter" onchange="fetchStudentsBySlot()">
+      <option value="">-- Select Slot --</option>
+    </select>
+
+    <button onclick="deleteAllInSlot()">Delete All Students in Selected Slot</button>
+
+
+    <div id="studentList">Loading...</div>
+
+  </div>
+
+
+  <!-- ============ Attendance setup ============ -->
+
+  <div id="attendance-setup" class="section container">
+    <h3>Attendance Setup</h3>
+
+    <label>Select Slot</label>
+    <select id="attendanceSlot">
+      <option value="">-- Select Slot --</option>
+    </select>
+
+    <label>Allowed Radius (in meters)</label>
+    <input type="number" id="radiusInput" placeholder="Enter radius e.g. 100" />
+
+    <label>Latitude</label>
+    <input type="text" id="latitude" readonly placeholder="Auto-detected latitude" />
+
+    <label>Longitude</label>
+    <input type="text" id="longitude" readonly placeholder="Auto-detected longitude" />
+
+    <label>Start Time</label>
+    <input type="time" id="startTimeInput" />
+
+    <label>End Time</label>
+    <input type="time" id="endTimeInput" />
+
+    <button onclick="saveAttendanceSettings()">Save Settings</button>
+
+    <p id="radiusSavedMsg" style="margin-top: 10px; color: #4caf50;"></p>
+  </div>
+
+
+
+  <!-- ============ Dowload the report ============ -->
+
+  <div id="download" class="section container">
+    <h3>Download Attendance Sheet</h3>
+
+    <label for="downloadSlot">Select Slot</label>
+    <select id="downloadSlot">
+      <option value="">-- Select Slot --</option>
+    </select>
+
+    <button onclick="downloadAttendance('present')">Download Present List</button>
+    <button onclick="downloadAttendance('absent')">Download Absent List</button>
+
+
+  </div>
+
+</body>
+
+<script>
+  // ============ Capture the latitude and longitude ===========
+  let detectedLatitude = null;
+  let detectedLongitude = null;
+
+  function captureTeacherLocation() {
+    const latField = document.getElementById("latitude");
+    const lngField = document.getElementById("longitude");
+
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser.");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        latField.value = position.coords.latitude.toFixed(6);
+        lngField.value = position.coords.longitude.toFixed(6);
+        console.log("✅ Location captured:", latField.value, lngField.value);
+      },
+      (error) => {
+        alert("❌ Location access denied or unavailable. Please allow GPS access.");
+        console.error("Geolocation error:", error);
+      }
+    );
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    captureTeacherLocation(); // ✅ Run this right when page loads
+  });
+
+
+</script>
+
+<script>
+  function showSection(sectionId) {
+    document.querySelectorAll(".section").forEach(section => {
+      section.classList.remove("active");
+    });
+    document.getElementById(sectionId).classList.add("active");
+
+    if (sectionId === "attendance-setup") {
+      captureTeacherLocation();
+      populateAttendanceSlotDropdown();
+    }
+
+    if (sectionId === "download") {
+      populateDownloadSlots();
+    }
+
+    if (sectionId === "view-students") {
+      fetchSlots();
+      fetchStudentsBySlot();
+    }
+  }
+
+
+
+  function logout() {
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    alert("Logging out...");
+    window.location.href = "login.html";
+  }
+
+  function downloadExcel() {
+    alert("Downloading attendance sheet...");
+  }
+
+  // ============ Add Student Form Submission ============ //
+
+  const addStudentForm = document.getElementById("addStudentForm");
+  addStudentForm.addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const name = addStudentForm.name.value;
+    const email = addStudentForm.email.value;
+    const regno = addStudentForm.regno.value;
+    const slot = addStudentForm.slot.value;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/teacher/add-student`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({ name, email, regNo: regno, slot }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        alert("✅ Student added!");
+        addStudentForm.reset();
+      } else {
+        alert(data.message || "Failed to add student");
+      }
+    } catch (err) {
+      alert("Error occurred");
+      console.error(err);
+    }
+  });
+
+
+  // ============ Redirect to login if not logged in and Dynamic Greeting with name ============ //
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const name = localStorage.getItem("name");
+    const token = localStorage.getItem("token");
+    const role = localStorage.getItem("role");
+
+    if (!token || role !== "teacher") {
+      alert("Unauthorized access. Please log in as a teacher.");
+      window.location.href = "login.html";
+      return;
+    }
+
+    // Greeting
+    const greetingText = document.getElementById("greetingText");
+    const hour = new Date().getHours();
+    let greeting = "Hello";
+
+    if (hour >= 5 && hour < 12) {
+      greeting = "Good Morning";
+    } else if (hour >= 12 && hour < 17) {
+      greeting = "Good Afternoon";
+    } else {
+      greeting = "Good Evening";
+    }
+
+    greetingText.innerText = `${greeting}, ${name || "Teacher"} 👩‍🏫`;
+  });
+
+
+
+</script>
+
+<script>
+
+  //  ============ To upload xl ============ //
+
+  async function uploadExcel() {
+    const fileInput = document.getElementById("excelFileInput");
+    const file = fileInput.files[0];
+
+    if (!file) {
+      alert("Please select an Excel (.xlsx) file first.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/teacher/upload-students`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        alert("✅ Students uploaded successfully!");
+      } else {
+        alert(data.message || "Failed to upload students");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Something went wrong during upload.");
+    }
+  }
+</script>
+
+<script>
+
+  // ============= To view Students Slot Wise =============
+
+  async function fetchSlots() {
+    try {
+      const res = await fetch(`${API_BASE_URL}/teacher/slots`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      const slots = await res.json();
+      const slotDropdown = document.getElementById('slotFilter');
+
+      slotDropdown.innerHTML = '<option value="">-- Select Slot --</option>';
+
+      slots.forEach(slot => {
+        const option = document.createElement('option');
+        option.value = slot;
+        option.innerText = slot;
+        slotDropdown.appendChild(option);
+      });
+    } catch (err) {
+      console.error('❌ Error fetching slots:', err);
+    }
+  }
+
+
+  // ============ Show Students ============
+
+  async function fetchStudentsBySlot() {
+    const selectedSlot = document.getElementById('slotFilter').value;
+    if (!selectedSlot) {
+      document.getElementById('studentList').innerHTML = '<p>Please select a slot to view students.</p>';
+      return;
+    }
+
+    const url = `${API_BASE_URL}/teacher/students?slot=${encodeURIComponent(selectedSlot)}`;
+
+
+    try {
+      const res = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+
+      const students = await res.json();
+      const container = document.getElementById('studentList');
+      container.innerHTML = '';
+
+      if (students.length === 0) {
+        container.innerHTML = '<p>No students found for this slot.</p>';
+        return;
+      }
+
+      students.forEach((stu, index) => {
+        const div = document.createElement('div');
+        div.style.marginBottom = '10px';
+        div.style.padding = '10px';
+        div.style.border = '1px solid #ffffff22';
+        div.style.borderRadius = '6px';
+
+        div.innerHTML = `
+        <strong>${index + 1}. ${stu.name}</strong><br>
+        Email: ${stu.email}<br>
+        RegNo: ${stu.regNo}<br>
+        Slot: ${Array.isArray(stu.slot) ? stu.slot.join(", ") : stu.slot}
+        <button onclick="deleteStudent('${stu.regNo}')">Delete</button>
+      `;
+
+        container.appendChild(div);
+      });
+    } catch (err) {
+      console.error('❌ Error fetching students:', err);
+      document.getElementById('studentList').innerHTML = 'Error loading students.';
+    }
+  }
+
+
+  // ============= Delete Student by name ============
+
+  async function deleteStudent(regNo) {
+    if (!confirm(`Delete student with RegNo: ${regNo}?`)) return;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/teacher/students/${regNo}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      const data = await res.json();
+      alert(data.message || 'Student deleted');
+      fetchStudentsBySlot();
+    } catch (err) {
+      console.error(err);
+      alert('Error deleting student');
+    }
+  }
+
+
+  // ============ Delete all students ============
+
+  async function deleteAllInSlot() {
+    const selectedSlot = document.getElementById('slotFilter').value;
+    if (!selectedSlot) return alert('Please select a slot first.');
+
+    if (!confirm(`Delete all students from slot: ${selectedSlot}?`)) return;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/teacher/slots/${encodeURIComponent(selectedSlot)}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      const data = await res.json();
+      alert(data.message || 'Deleted');
+      fetchSlots();
+      fetchStudentsBySlot();
+    } catch (err) {
+      console.error(err);
+      alert('Error deleting slot');
+    }
+  }
+
+</script>
+
+<script>
+  // ============ Attendance Settings ============
+
+  function saveAttendanceSettings() {
+    const slot = document.getElementById("attendanceSlot").value;
+    const radius = document.getElementById("radiusInput").value;
+    const latitude = document.getElementById("latitude").value;
+    const longitude = document.getElementById("longitude").value;
+    const startTime = document.getElementById("startTimeInput").value;
+    const endTime = document.getElementById("endTimeInput").value;
+
+    const selectedSlot = document.getElementById("attendanceSlot").value;
+    if (!selectedSlot) return alert("Please select a slot for attendance");
+
+    console.log("🔍 Submitting with:", { slot, radius, latitude, longitude, startTime, endTime });
+
+    if (!radius || !startTime || !endTime || !latitude || !longitude) {
+      alert("Please complete all fields, including location.");
+      return;
+    }
+
+    const today = new Date().toISOString().split('T')[0];
+    const data = { radius, latitude, longitude, startTime, endTime, slot: selectedSlot, date: today };
+
+    fetch(`${API_BASE_URL}/teacher/attendance-settings`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+      body: JSON.stringify(data),
+    })
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById("radiusSavedMsg").innerText =
+          data.message || "Attendance settings saved!";
+      })
+      .catch(err => {
+        console.error("❌ Error saving settings:", err);
+        alert("Something went wrong.");
+      });
+  }
+
+  async function populateAttendanceSlotDropdown() {
+    try {
+      const res = await fetch(`${API_BASE_URL}/teacher/slots`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        }
+      });
+      const slots = await res.json();
+      const dropdown = document.getElementById("attendanceSlot");
+      dropdown.innerHTML = '<option value="">-- Select Slot --</option>';
+      slots.forEach(slot => {
+        const option = document.createElement("option");
+        option.value = slot;
+        option.innerText = slot;
+        dropdown.appendChild(option);
+      });
+    } catch (err) {
+      console.error("Failed to fetch slots:", err);
+    }
+  }
+
+
+
+
+
+</script>
+
+<script>
+  // Populate slot dropdown
+  async function populateDownloadSlots() {
+    try {
+      const res = await fetch(`${API_BASE_URL}/teacher/slots`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`
+        }
+      });
+      const slots = await res.json();
+      const slotDropdown = document.getElementById("downloadSlot");
+
+      slotDropdown.innerHTML = '<option value="">-- Select Slot --</option>';
+      slots.forEach(slot => {
+        const opt = document.createElement("option");
+        opt.value = slot;
+        opt.innerText = slot;
+        slotDropdown.appendChild(opt);
+      });
+    } catch (err) {
+      console.error("Failed to fetch slots", err);
+    }
+  }
+
+  // Call when download section opens
+  function showSection(sectionId) {
+    document.querySelectorAll(".section").forEach(section => {
+      section.classList.remove("active");
+    });
+    document.getElementById(sectionId).classList.add("active");
+
+    if (sectionId === "download") {
+      populateDownloadSlots();
+    }
+    if (sectionId === "view-students") {
+      fetchSlots();
+      fetchStudentsBySlot();
+    }
+  }
+
+  // Download Attendance
+  async function downloadAttendance(type) {
+    const slot = document.getElementById("downloadSlot").value;
+    if (!slot) return alert("Please select a slot.");
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/teacher/download-attendance?slot=${encodeURIComponent(slot)}&type=${type}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      if (!res.ok) {
+        alert("Failed to download file.");
+        return;
+      }
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+
+      const today = new Date().toISOString().split("T")[0];
+      a.href = url;
+      a.download = `${slot}-${type}-list-${today}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+
+      alert(`✅ ${type.charAt(0).toUpperCase() + type.slice(1)} list downloaded!`);
+    } catch (err) {
+      console.error("Download error:", err);
+      alert("Something went wrong while downloading.");
+    }
+  }
+
+</script>
+
+<script>
+  // ============ Geolocation and radius ============
+
+  function saveRadius() {
+    const radius = document.getElementById("radiusInput").value;
+    const startTime = "08:00";
+    const endTime = "20:00";
+
+    if (!radius || radius <= 0) {
+      alert("Please enter a valid radius.");
+      return;
+    }
+
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const latitude = position.coords.latitude;
+          const longitude = position.coords.longitude;
+
+          try {
+            const res = await fetch(`${API_BASE_URL}/teacher/attendance-settings`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+              body: JSON.stringify({ radius, latitude, longitude, startTime, endTime }),
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+              document.getElementById("radiusSavedMsg").innerText = data.message;
+            } else {
+              alert(data.message || "Failed to save settings.");
+            }
+          } catch (err) {
+            console.error("Error saving settings:", err);
+            alert("Something went wrong.");
+          }
+        },
+        () => {
+          alert("❌ Failed to get location. Please allow location access.");
+        }
+      );
+    } else {
+      alert("Geolocation not supported.");
+    }
+  }
+
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+  const slotDropdown = document.getElementById("attendanceSlot");
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/teacher/slots`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`
+      }
+    });
+    const slots = await res.json();
+
+    // Clear previous options if needed
+    slotDropdown.innerHTML = '<option value="">-- Select Slot --</option>';
+
+    if (Array.isArray(slots)) {
+      slots.forEach((slot) => {
+        const option = document.createElement("option");
+        option.value = slot;
+        option.textContent = slot;
+        slotDropdown.appendChild(option);
+      });
+    } else {
+      console.error("❌ Expected slots to be an array but got:", slots);
+    }
+  } catch (err) {
+    console.error("❌ Failed to load slots:", err);
+    alert("Failed to load slots for attendance setup.");
+  }
+});
+</script>
+
+
+
+
+
+
+</html>

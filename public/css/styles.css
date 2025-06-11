@@ -1,0 +1,26 @@
+/* Footer styles for the landing page */
+footer {
+    margin-top: auto;
+    background-color: rgba(255, 255, 255, 0.05);
+    padding: 20px;
+    text-align: center;
+    backdrop-filter: blur(6px);
+    color: #ccc;
+}
+
+.footer-text {
+    color: #aaa;
+    font-size: 0.9em;
+    margin-bottom: 10px;
+}
+
+.social-icons a {
+    margin: 0 10px;
+    color: #00c6ff;
+    font-size: 1.4em;
+    text-decoration: none;
+}
+
+.social-icons a:hover {
+    color: #ffffff;
+}
