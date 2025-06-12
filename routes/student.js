@@ -6,6 +6,9 @@ const jwt = require('jsonwebtoken');
 const Attendance = require('../models/Attendance');
 const verifyToken = require('../middleware/auth');
 
+const nowIST = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+
+console.log("IST time:", new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
 
 // ============ Middleware to authenticate and get userId from token ============
 function authenticateToken(req, res, next) {
