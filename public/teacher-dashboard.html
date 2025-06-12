@@ -856,12 +856,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     slotDropdown.innerHTML = '<option value="">-- Select Slot --</option>';
 
     if (Array.isArray(slots)) {
-      slots.forEach((slot) => {
-        const option = document.createElement("option");
-        option.value = slot;
-        option.textContent = slot;
-        slotDropdown.appendChild(option);
-      });
+    slots.forEach((slot) => {
+      const option = document.createElement("option");
+      option.value = slot;
+      option.textContent = slot;
+      slotDropdown.appendChild(option);
+    });
     } else {
       console.error("❌ Expected slots to be an array but got:", slots);
     }
