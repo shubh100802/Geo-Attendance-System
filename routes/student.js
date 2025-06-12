@@ -91,7 +91,8 @@ router.get('/my-slot', authenticateToken, async (req, res) => {
 router.post('/mark-attendance', authenticateToken, async (req, res) => {
   try {
     const { slot } = req.body;
-    const currentTime = new Date();
+    // Convert current time to IST (UTC+5:30)
+    const currentTime = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
     const currentDate = currentTime.toISOString().split('T')[0];
 
     if (!slot) {
