@@ -35,7 +35,5 @@ This project includes two separate dashboards:
 - Database: MongoDB Atlas
 - Frontend: HTML, CSS, JavaScript 
 - Deployment : Render 
-- File upload: Multer (for Excel sheets)
 - Authentication: JWT (JSON Web Tokens)
-- Excel Processing: XLSX package
 
