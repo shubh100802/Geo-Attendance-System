@@ -148,7 +148,7 @@
             min-height: 24px;
         }
 
-        /* Modal overlay - use flex for perfect centering */
+        /* Modal overlay */
         #history-modal {
             display: none;
             position: absolute;
@@ -254,7 +254,9 @@
         <label for="slot-select">Select Your Slot</label>
         <select id="slot-select">
             <option value="">-- Select Slot --</option>
+
             <!-- dynamically loaded slots -->
+             
         </select>
 
 
@@ -265,7 +267,7 @@
 
         <div id="attendance-message" class="message"></div>
 
-        <!-- Attendance History Modal/Section -->
+        <!-- ============ Attendance History Modal/Section ============ -->
         <div id="history-modal">
             <div>
                 <h3 style="margin-top:0; color:#0072ff; font-size:1.3rem;">Attendance History</h3>
@@ -288,10 +290,11 @@
 
     document.getElementById("studentName").innerText = `Welcome, ${localStorage.getItem("name") || "Student"}`;
 
-    // === LOCATION ONLY SCRIPT ===
+
+    // ============ LOCATION ============
     function showLocation() {
         if (!("geolocation" in navigator)) {
-            message.innerText = "❌ Geolocation not supported by your browser.";
+            message.innerText = " Geolocation not supported by your browser.";
             return;
         }
 
@@ -301,11 +304,11 @@
                 const longitude = position.coords.longitude;
 
                 locationInfo.innerText = `Latitude: ${latitude.toFixed(5)}, Longitude: ${longitude.toFixed(5)}`;
-                message.innerText = "✅ Location captured successfully!";
+                message.innerText = " Location captured successfully!";
             },
             (error) => {
-                console.error("❌ Error getting location:", error);
-                message.innerText = "❌ Unable to retrieve location. Please enable location access.";
+                console.error(" Error getting location:", error);
+                message.innerText = " Unable to retrieve location. Please enable location access.";
             }
         );
     }
@@ -345,11 +348,11 @@
                 slotSelect.appendChild(option);
             });
 
-            // ✅ Re-run check after slots are loaded
+            
             checkIfAllowed();
 
         } catch (err) {
-            console.error("❌ Error loading student slots:", err);
+            console.error(" Error loading student slots:", err);
             alert("Failed to load slot list. Please re-login if issue persists.");
         }
     }
@@ -383,7 +386,8 @@
                 .catch(() => { });
         }
 
-        // Fallback: default redirect
+        // ============ logout ============
+
         setTimeout(() => {
             window.location.href = "login.html";
         }, 1000);
@@ -396,7 +400,7 @@
     async function checkIfAllowed() {
         const selectedSlot = document.getElementById('slot-select').value;
         const messageDiv = document.getElementById('attendance-message');
-        messageDiv.textContent = ""; // Clear previous message
+        messageDiv.textContent = "";
 
         if (!selectedSlot) {
             showMessage("Please select a slot.", "error");
@@ -405,7 +409,7 @@
         }
 
         if (!("geolocation" in navigator)) {
-            showMessage("❌ Geolocation not supported.", "error");
+            showMessage(" Geolocation not supported.", "error");
             markBtn.disabled = true;
             return;
         }
@@ -435,22 +439,23 @@
                 }
 
             } catch (err) {
-                showMessage("❌ Error validating attendance permission.", "error");
+                showMessage(" Error validating attendance permission.", "error");
                 markBtn.disabled = true;
             }
         }, (error) => {
-            showMessage("❌ Unable to access your location.", "error");
+            showMessage(" Unable to access your location.", "error");
             markBtn.disabled = true;
         });
     }
 
-    // Re-check allow/deny when slot is changed
+    
     slotSelect.addEventListener("change", checkIfAllowed);
 </script>
 
 <script>
 
-    // Re-check when slot changes
+    // ============ Re-check when slot changes ============
+
     document.getElementById("slot-select")?.addEventListener("change", checkIfAllowed);
 </script>
 
@@ -465,7 +470,7 @@
             const latitude = position.coords.latitude;
             const longitude = position.coords.longitude;
 
-            // 1. Validate location
+            // ============ Validate location ============
             const locationRes = await fetch(`${API_BASE_URL}/student/validate-location`, {
                 method: 'POST',
                 headers: {
@@ -481,7 +486,7 @@
                 return;
             }
 
-            // 2. Mark attendance
+            // ============ Mark attendance ============
             const res = await fetch(`${API_BASE_URL}/student/mark-attendance`, {
                 method: 'POST',
                 headers: {
@@ -498,7 +503,7 @@
                 showMessage(data.message || "Failed to mark attendance", "error");
             }
         }, (error) => {
-            showMessage("❌ Unable to access your location.", "error");
+            showMessage(" Unable to access your location.", "error");
         });
     }
 
@@ -511,6 +516,7 @@
 
     // console.log("Selected Slot:", selectedSlot);
     // console.log("Current Location:", { latitude: currentLatitude, longitude: currentLongitude });
+
     console.log("Token:", localStorage.getItem('token'));
 </script>
 

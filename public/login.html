@@ -17,6 +17,7 @@
             height: 100vh;
             margin: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding-bottom: 100px;
         }
 
         .login-container {
@@ -115,6 +116,40 @@
                 padding: 20px;
             }
         }
+
+        /* Footer Styles */
+        footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(8px);
+            padding: 15px 0;
+            text-align: center;
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .footer-text {
+            margin-bottom: 10px;
+        }
+
+        .social-icons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .social-icons a {
+            color: #fff;
+            font-size: 20px;
+            transition: color 0.3s ease;
+        }
+
+        .social-icons a:hover {
+            color: #00c6ff;
+        }
     </style>
 </head>
 
@@ -142,6 +177,15 @@
         </form>
 
     </div>
+
+    <footer>
+        <div class="footer-text">Have feedback? Connect with us on Instagram</div>
+        <div class="social-icons">
+            <a href="https://www.instagram.com/itsmeshubh2026?igsh=MW51dXh1ZHc4bjY5Ng==" target="_blank" title="Follow us on Instagram">
+                <i class="fab fa-instagram"></i>
+            </a>
+        </div>
+    </footer>
 </body>
 
 
@@ -160,7 +204,9 @@
 </script>
 
 <script>
-    // login 
+
+    // ============ login ============ 
+
     const API_BASE_URL = window.location.origin;
     const form = document.querySelector("form");
 

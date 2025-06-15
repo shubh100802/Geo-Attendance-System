@@ -39,14 +39,14 @@ function saveAttendanceSettings() {
   const longitude = document.getElementById("longitude").value;
   const startTime = document.getElementById("startTimeInput").value;
   const endTime = document.getElementById("endTimeInput").value;
-  const slot = document.getElementById("slotSelect").value; // <-- ✅ Add this line
+  const slot = document.getElementById("slotSelect").value; 
 
   if (!radius || !startTime || !endTime || !latitude || !longitude || !slot) {
-    alert("Please complete all fields including location and slot."); // <-- updated message
+    alert("Please complete all fields including location and slot."); 
     return;
   }
 
-  const data = { radius, latitude, longitude, startTime, endTime, slot }; // <-- ✅ Include slot
+  const data = { radius, latitude, longitude, startTime, endTime, slot }; 
 
   fetch("http://localhost:3000/teacher/attendance-settings", {
     method: "POST",

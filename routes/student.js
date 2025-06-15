@@ -28,7 +28,7 @@ function authenticateToken(req, res, next) {
 router.post('/validate-location', authenticateToken, async (req, res) => {
   try {
     const { latitude, longitude, slot } = req.body;
-    console.log("✅ Received body:", req.body);
+    console.log(" Received body:", req.body);
 
 
      if (!latitude || !longitude || !slot) {
@@ -45,7 +45,7 @@ router.post('/validate-location', authenticateToken, async (req, res) => {
     const setting = await AttendanceSetting.findOne({ createdBy: student.createdBy, slot });
 
     if (!setting || !setting.latitude || !setting.longitude || !setting.radius) {
-      return res.status(400).json({ allowed: false, message: "❌ Teacher has not set attendance location yet." });
+      return res.status(400).json({ allowed: false, message: " Teacher has not set attendance location yet." });
     }
 
     const allowedLat = setting.latitude;
@@ -184,7 +184,7 @@ router.get("/download-attendance", verifyToken, async (req, res) => {
     const attendance = await Attendance.findOne({ 
       slot, 
       date: dateString,
-      createdBy: req.userId // Filter by the teacher's ID
+      createdBy: req.userId 
     });
 
     const students = await Student.find({ slot });

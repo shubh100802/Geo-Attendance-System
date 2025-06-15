@@ -64,7 +64,7 @@ router.post('/add-student', verifyToken, async (req, res) => {
     await newStudent.save();
     res.status(201).json({ message: 'Student added successfully' });
   } catch (err) {
-    console.error('❌ Error in /add-student:', err);
+    console.error(' Error in /add-student:', err);
     res.status(500).json({ message: 'Server error while adding student' });
   }
 });
@@ -105,14 +105,14 @@ router.post('/upload-students', verifyToken, upload.single('file'), async (req, 
         regNo: RegNo,
         password: hashedPassword,
         slot: Slot.split("+"),
-        createdBy: req.userId // Always set from the authenticated teacher
+        createdBy: req.userId 
       }).save();
     }
 
     res.status(201).json({ message: "Students uploaded successfully!" });
 
   } catch (err) {
-    console.error("❌ Error in /upload-students:", err);
+    console.error("Error in /upload-students:", err);
     res.status(500).json({ message: "Server error during Excel upload" });
   }
 });
@@ -123,11 +123,11 @@ router.post('/upload-students', verifyToken, upload.single('file'), async (req, 
 router.get('/students', verifyToken, async (req, res) => {
   try {
     const slot = req.query.slot;
-    const filter = { createdBy: req.userId }; // Filter by teacher's ID
+    const filter = { createdBy: req.userId }; 
     if (slot) {
       filter.slot = slot;
     }
-    const students = await Student.find(filter).select("-password"); // omit passwords
+    const students = await Student.find(filter).select("-password"); 
     res.json(students);
   } catch (err) {
     console.error(err);
@@ -158,7 +158,7 @@ router.delete('/students/:regNo', async (req, res) => {
     await Student.deleteOne({ regNo });
     res.json({ message: 'Student deleted successfully' });
   } catch (err) {
-    console.error('❌ Error deleting student:', err);
+    console.error(' Error deleting student:', err);
     res.status(500).json({ message: 'Server error while deleting student' });
   }
 });
@@ -176,7 +176,7 @@ router.delete('/slots/:slot', verifyToken, async (req, res) => {
     });
     res.json({ message: `All students from slot ${slot} deleted for your account.` });
   } catch (err) {
-    console.error('❌ Error deleting slot:', err);
+    console.error('Error deleting slot:', err);
     res.status(500).json({ message: 'Server error while deleting slot' });
   }
 });
@@ -217,7 +217,7 @@ router.post('/attendance-settings', verifyToken, async (req, res) => {
 
     res.status(200).json({ message: "✅ Attendance settings saved!" });
   } catch (err) {
-    console.error("❌ Error saving settings:", err);
+    console.error(" Error saving settings:", err);
     res.status(500).json({ message: "Server error while saving settings" });
   }
 });
@@ -284,7 +284,7 @@ router.get("/download-attendance", async (req, res) => {
     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     res.send(buffer);
   } catch (err) {
-    console.error("❌ Download attendance error:", err);
+    console.error(" Download attendance error:", err);
     res.status(500).json({ message: "Failed to download attendance" });
   }
 });

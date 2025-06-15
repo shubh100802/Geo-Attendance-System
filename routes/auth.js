@@ -5,7 +5,8 @@ const Student = require('../models/Student');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-// POST /auth/login
+// ============ POST /auth/login ============
+
 router.post('/login', async (req, res) => {
   const { email, password, role } = req.body;
 
@@ -24,7 +25,8 @@ router.post('/login', async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(401).json({ message: 'Invalid email or password' });
 
-    // ✅ Role check
+    // ============ Role check ============
+    
     if (user.role && user.role !== role) {
       return res.status(403).json({ message: `Unauthorized: Please log in as a ${user.role}` });
     }
@@ -44,7 +46,6 @@ router.post('/login', async (req, res) => {
 });
 
 
-// console.log("Received token:", token);
-// console.log("Decoded token:", decoded);
+
 
 module.exports = router;

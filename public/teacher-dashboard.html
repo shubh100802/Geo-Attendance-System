@@ -91,7 +91,7 @@
     }
 
 
-    /* Move content right to make space for sidebar */
+    /* ============ Move content right ============ */
 
     .sidebar:hover~body {
       padding-left: 180px;
@@ -333,7 +333,10 @@
 </body>
 
 <script>
+
   // ============ Capture the latitude and longitude ===========
+
+
   let detectedLatitude = null;
   let detectedLongitude = null;
 
@@ -350,17 +353,17 @@
       (position) => {
         latField.value = position.coords.latitude.toFixed(6);
         lngField.value = position.coords.longitude.toFixed(6);
-        console.log("✅ Location captured:", latField.value, lngField.value);
+        console.log(" Location captured:", latField.value, lngField.value);
       },
       (error) => {
-        alert("❌ Location access denied or unavailable. Please allow GPS access.");
+        alert(" Location access denied or unavailable. Please allow GPS access.");
         console.error("Geolocation error:", error);
       }
     );
   }
 
   document.addEventListener("DOMContentLoaded", () => {
-    captureTeacherLocation(); // ✅ Run this right when page loads
+    captureTeacherLocation(); 
   });
 
 
@@ -425,7 +428,7 @@
       const data = await res.json();
 
       if (res.ok) {
-        alert("✅ Student added!");
+        alert("Student added!");
         addStudentForm.reset();
       } else {
         alert(data.message || "Failed to add student");
@@ -498,7 +501,7 @@
       const data = await res.json();
 
       if (res.ok) {
-        alert("✅ Students uploaded successfully!");
+        alert(" Students uploaded successfully!");
       } else {
         alert(data.message || "Failed to upload students");
       }
@@ -532,7 +535,7 @@
         slotDropdown.appendChild(option);
       });
     } catch (err) {
-      console.error('❌ Error fetching slots:', err);
+      console.error(' Error fetching slots:', err);
     }
   }
 
@@ -583,7 +586,7 @@
         container.appendChild(div);
       });
     } catch (err) {
-      console.error('❌ Error fetching students:', err);
+      console.error(' Error fetching students:', err);
       document.getElementById('studentList').innerHTML = 'Error loading students.';
     }
   }
@@ -678,7 +681,7 @@
           data.message || "Attendance settings saved!";
       })
       .catch(err => {
-        console.error("❌ Error saving settings:", err);
+        console.error(" Error saving settings:", err);
         alert("Something went wrong.");
       });
   }
@@ -779,7 +782,7 @@
       a.remove();
       window.URL.revokeObjectURL(url);
 
-      alert(`✅ ${type.charAt(0).toUpperCase() + type.slice(1)} list downloaded!`);
+      alert(` ${type.charAt(0).toUpperCase() + type.slice(1)} list downloaded!`);
     } catch (err) {
       console.error("Download error:", err);
       alert("Something went wrong while downloading.");
@@ -830,7 +833,7 @@
           }
         },
         () => {
-          alert("❌ Failed to get location. Please allow location access.");
+          alert(" Failed to get location. Please allow location access.");
         }
       );
     } else {
@@ -863,10 +866,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       slotDropdown.appendChild(option);
     });
     } else {
-      console.error("❌ Expected slots to be an array but got:", slots);
+      console.error(" Expected slots to be an array but got:", slots);
     }
   } catch (err) {
-    console.error("❌ Failed to load slots:", err);
+    console.error(" Failed to load slots:", err);
     alert("Failed to load slots for attendance setup.");
   }
 });

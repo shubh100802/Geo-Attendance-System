@@ -16,7 +16,7 @@ async function createTeacher(teacherData) {
     // Check if teacher already exists
     const existingTeacher = await User.findOne({ email: teacherData.email });
     if (existingTeacher) {
-      console.log(`⚠️ Teacher with email ${teacherData.email} already exists. Skipping...`);
+      console.log(` Teacher with email ${teacherData.email} already exists. Skipping...`);
       return null;
     }
 
@@ -34,10 +34,10 @@ async function createTeacher(teacherData) {
     });
 
     await teacher.save();
-    console.log(`✅ Teacher ${teacherData.name} added!`);
+    console.log(` Teacher ${teacherData.name} added!`);
     return teacher;
   } catch (err) {
-    console.error('❌ Error adding teacher:', err.message);
+    console.error(' Error adding teacher:', err.message);
     throw err;
   }
 }
@@ -57,7 +57,7 @@ async function addTeachers() {
         email: 'sajjadahmed@vitbhopal.ac.in',
         password: 'Ahmed@2025'
       }
-      // Add more teachers as needed
+      // Add more teachers 
     ];
 
     console.log(`Found ${teachers.length} teachers to add`);
@@ -66,11 +66,11 @@ async function addTeachers() {
       await createTeacher(teacher);
     }
     
-    console.log('✅ All teachers added successfully!');
+    console.log(' All teachers added successfully!');
     await mongoose.disconnect();
     console.log('Disconnected from MongoDB');
   } catch (err) {
-    console.error('❌ Error:', err.message);
+    console.error(' Error:', err.message);
     await mongoose.disconnect();
     process.exit(1);
   }
