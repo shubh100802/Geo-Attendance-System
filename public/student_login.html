@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Login</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Roboto, sans-serif;
+    }
+    html, body {
+      height: 100%;
+      min-height: 100vh;
+      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+      color: #fff;
+    }
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      padding: 32px 0 0 0;
+      text-align: center;
+    }
+    header h1 {
+      color: #00c6ff;
+      font-size: 2.2rem;
+      font-weight: bold;
+      margin-bottom: 0;
+    }
+    .login-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    form {
+      background: rgba(0,0,0,0.85);
+      padding: 36px 28px;
+      border-radius: 18px;
+      box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+      width: 100%;
+      max-width: 370px;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+    }
+    form h2 {
+      text-align: center;
+      margin-bottom: 24px;
+      color: #00c6ff;
+      font-size: 2em;
+    }
+    label {
+      margin-top: 12px;
+      margin-bottom: 6px;
+      color: #ccc;
+      font-size: 1em;
+    }
+    input[type="email"],
+    input[type="password"],
+    input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      padding-right: 44px;
+      border: none;
+      border-radius: 10px;
+      background: #f7f7f7;
+      color: #222;
+      font-size: 1em;
+      height: 44px;
+      margin-bottom: 12px;
+    }
+    .input-group {
+      position: relative;
+    }
+    .input-group i {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #666;
+      cursor: pointer;
+      transition: color 0.3s ease;
+    }
+    .input-group i:hover {
+      color: #00c6ff;
+    }
+    button {
+      background: linear-gradient(to right, #00c6ff, #0072ff);
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 1em;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 12px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 198, 255, 0.3);
+    }
+    .back-link {
+      text-align: center;
+      margin-top: 20px;
+    }
+    .back-link a {
+      color: #00c6ff;
+      text-decoration: none;
+      font-size: 0.9em;
+      transition: color 0.3s ease;
+    }
+    .back-link a:hover {
+      color: #fff;
+    }
+    footer {
+      margin-top: auto;
+      padding: 20px;
+      text-align: center;
+    }
+    .footer-text {
+      color: #ccc;
+      font-size: 0.9em;
+      margin-bottom: 10px;
+    }
+    .social-icons a {
+      color: #00c6ff;
+      font-size: 1.5em;
+      margin: 0 10px;
+      transition: color 0.3s ease;
+    }
+    .social-icons a:hover {
+      color: #fff;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Student Login</h1>
+  </header>
+
+  <div class="login-container">
+    <form id="studentLoginForm">
+      <h2>Welcome Back</h2>
+      
+      <label for="email">Email</label>
+      <div class="input-group">
+        <input type="email" id="email" required placeholder="Enter your email">
+        <i class="fas fa-envelope"></i>
+      </div>
+      
+      <label for="password">Password</label>
+      <div class="input-group">
+        <input type="password" id="password" required placeholder="Enter your password">
+        <i class="fas fa-eye" onclick="togglePassword('password', this)"></i>
+      </div>
+      
+      <button type="submit">Login</button>
+    </form>
+    
+    <div class="back-link">
+      <a href="index.html"><i class="fas fa-arrow-left"></i> Back to Home</a>
+    </div>
+  </div>
+
+<footer>
+  <div class="footer-text">Have feedback? Connect with us on Instagram</div>
+  <div class="social-icons">
+      <a href="https://www.instagram.com/itsmeshubh2026?igsh=MW51dXh1ZHc4bjY5Ng==" target="_blank">
+          <i class="fab fa-instagram"></i>
+      </a>
+  </div>
+</footer>
+
+<script>
+// Browser detection utility
+function detectBrowser() {
+  const userAgent = navigator.userAgent;
+  
+  // A more robust check for Chrome that excludes other Chromium browsers like Edge and Opera
+  const isChrome = /Chrome/.test(userAgent) && !/Edg/.test(userAgent) && !/OPR/.test(userAgent);
+  
+  return {
+    isChrome: isChrome,
+    browserName: getBrowserName(userAgent)
+  };
+}
+
+function getBrowserName(userAgent) {
+  if (/Edg/.test(userAgent)) {
+    return 'Edge';
+  }
+  if (/OPR/.test(userAgent) || /Opera/.test(userAgent)) {
+    return 'Opera';
+  }
+  if (/Firefox/.test(userAgent)) {
+    return 'Firefox';
+  }
+  if (/Chrome/.test(userAgent)) {
+    return 'Chrome';
+  }
+  if (/Safari/.test(userAgent)) {
+    return 'Safari';
+  }
+  return 'Unknown';
+}
+
+function showChromeOnlyMessage() {
+  const browserInfo = detectBrowser();
+  
+  if (!browserInfo.isChrome) {
+    // Create overlay
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    `;
+    
+    overlay.innerHTML = `
+      <div style="
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 40px;
+        border-radius: 20px;
+        text-align: center;
+        max-width: 500px;
+        margin: 20px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        color: white;
+      ">
+        <div style="font-size: 48px; margin-bottom: 20px;">🚫</div>
+        <h2 style="margin-bottom: 20px; color: #fff;">Browser Not Supported</h2>
+        <p style="margin-bottom: 20px; line-height: 1.6;">
+          You are currently using <strong>${browserInfo.browserName}</strong>.
+          <br><br>
+          This application requires <strong>Google Chrome</strong> for optimal functionality and security.
+        </p>
+        <div style="
+          background: rgba(255,255,255,0.1);
+          padding: 20px;
+          border-radius: 10px;
+          margin: 20px 0;
+          border-left: 4px solid #4CAF50;
+        ">
+          <h3 style="margin: 0 0 10px 0; color: #4CAF50;">Why Chrome Only?</h3>
+          <ul style="text-align: left; margin: 0; padding-left: 20px;">
+            <li>Better geolocation accuracy</li>
+            <li>Enhanced security features</li>
+            <li>Consistent performance</li>
+            <li>Optimal compatibility</li>
+          </ul>
+        </div>
+        <div style="margin-top: 30px;">
+          <a href="https://www.google.com/chrome/" target="_blank" style="
+            background: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 25px;
+            display: inline-block;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+          " onmouseover="this.style.background='#45a049'" onmouseout="this.style.background='#4CAF50'">
+            Download Chrome
+          </a>
+          <button onclick="window.close()" style="
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+          " onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+            Close
+          </button>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(overlay);
+    return false;
+  }
+  
+  return true;
+}
+
+// Check browser on page load
+document.addEventListener('DOMContentLoaded', function() {
+  if (!showChromeOnlyMessage()) {
+    return; // Stop execution if not Chrome
+  }
+});
+
+  function getApiBaseUrl() {
+    // Use window.location for dynamic base URL
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      return 'http://localhost:5000';
+    } else {
+      // Use same origin for deployed
+      return window.location.origin;
+    }
+  }
+
+  function togglePassword(inputId, iconEl) {
+    const input = document.getElementById(inputId);
+    if (input.type === "password") {
+      input.type = "text";
+      iconEl.classList.remove("fa-eye");
+      iconEl.classList.add("fa-eye-slash");
+    } else {
+      input.type = "password";
+      iconEl.classList.remove("fa-eye-slash");
+      iconEl.classList.add("fa-eye");
+    }
+  }
+
+  document.getElementById('studentLoginForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    // Check browser before allowing login
+    if (!showChromeOnlyMessage()) {
+      return;
+    }
+    
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const API_BASE_URL = getApiBaseUrl();
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password, role: 'student' }),
+      });
+      const data = await res.json();
+      if (res.ok && data.token) {
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('role', data.role);
+        localStorage.setItem('name', data.name);
+        window.location.href = 'student-dashboard.html';
+      } else {
+        alert(data.message || 'Login failed');
+      }
+    } catch (err) {
+      alert('Something went wrong.');
+      console.error(err);
+    }
+  });
+</script>
+
+</html>

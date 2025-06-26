@@ -5,14 +5,15 @@ const path = require('path');
 app.use(cors());
 const mongoose = require('mongoose');
 const authRoutes = require('./routes/auth');
+const { checkBrowser } = require('./middleware/browserCheck');
 require('dotenv').config();
 
 app.use(express.json());
 
 // API Routes
-app.use('/auth', authRoutes);
-app.use('/teacher', require('./routes/teacher'));
-app.use('/student', require('./routes/student'));
+app.use('/auth', checkBrowser, authRoutes);
+app.use('/teacher', checkBrowser, require('./routes/teacher'));
+app.use('/student', checkBrowser, require('./routes/student'));
 
 // Serve static files from the public directory
 app.use(express.static(path.join(__dirname, 'public')));

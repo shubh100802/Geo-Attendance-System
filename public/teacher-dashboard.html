@@ -161,25 +161,228 @@
       margin-top: 15px;
       font-weight: bold;
     }
+
+    /* Developers Section Styling */
+    #developers {
+      background-color: rgba(255, 255, 255, 0.05);
+      color: whitesmoke;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      border-radius: 18px;
+      padding: 36px 32px 32px 32px;
+      margin-top: 40px;
+      max-width: 650px;
+      margin-left: auto;
+      margin-right: auto;
+      font-size: 1.08em;
+      position: relative;
+    }
+    #developers h3 {
+      color: #0072ff;
+      font-size: 2em;
+      margin-bottom: 10px;
+      letter-spacing: 1px;
+    }
+    #developers h4 {
+      color: #00c6ff;
+      margin-top: 24px;
+      margin-bottom: 10px;
+      font-size: 1.15em;
+    }
+    #developers ul {
+      padding-left: 20px;
+      margin-bottom: 0;
+    }
+    #developers li {
+      margin-bottom: 7px;
+      line-height: 1.7;
+    }
+    #developers li strong {
+      color: #0072ff;
+    }
+    #developers a {
+      color: #00c6ff;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    #developers a:hover {
+      color: #0072ff;
+      text-decoration: underline;
+    }
+    #developers .dev-role {
+      background: #e3f2fd;
+      color: #0072ff;
+      border-radius: 8px;
+      padding: 2px 10px;
+      font-size: 0.95em;
+      margin-left: 8px;
+    }
+    #developers .dev-contact {
+      margin-top: 18px;
+      font-size: 1em;
+      color: whitesmoke;
+    }
+    #developers .dev-stack {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 18px;
+      margin-bottom: 10px;
+    }
+    #developers .dev-stack li {
+      background: #f0f7ff;
+      border-radius: 6px;
+      padding: 4px 12px;
+      color: #0072ff;
+      font-size: 0.98em;
+      margin-bottom: 0;
+    }
+    #developers .dev-icon {
+      margin-right: 7px;
+      color: #00c6ff;
+      font-size: 1.1em;
+    }
   </style>
 </head>
 
 <script>
-  const API_BASE_URL = window.location.hostname === 'localhost' 
-    ? 'http://localhost:3000' 
-    : window.location.origin;
+  const API_BASE_URL = 'http://localhost:5000';
 
   let isLocationCaptured = false;
+
+  // Browser detection utility
+  function detectBrowser() {
+    const userAgent = navigator.userAgent;
+    
+    // A more robust check for Chrome that excludes other Chromium browsers like Edge and Opera
+    const isChrome = /Chrome/.test(userAgent) && !/Edg/.test(userAgent) && !/OPR/.test(userAgent);
+    
+    return {
+      isChrome: isChrome,
+      browserName: getBrowserName(userAgent)
+    };
+  }
+
+  function getBrowserName(userAgent) {
+    if (/Edg/.test(userAgent)) {
+      return 'Edge';
+    }
+    if (/OPR/.test(userAgent) || /Opera/.test(userAgent)) {
+      return 'Opera';
+    }
+    if (/Firefox/.test(userAgent)) {
+      return 'Firefox';
+    }
+    if (/Chrome/.test(userAgent)) {
+      return 'Chrome';
+    }
+    if (/Safari/.test(userAgent)) {
+      return 'Safari';
+    }
+    return 'Unknown';
+  }
+
+  function showChromeOnlyMessage() {
+    const browserInfo = detectBrowser();
+    
+    if (!browserInfo.isChrome) {
+      // Create overlay
+      const overlay = document.createElement('div');
+      overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      `;
+      
+      overlay.innerHTML = `
+        <div style="
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          padding: 40px;
+          border-radius: 20px;
+          text-align: center;
+          max-width: 500px;
+          margin: 20px;
+          box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+          color: white;
+        ">
+          <div style="font-size: 48px; margin-bottom: 20px;">🚫</div>
+          <h2 style="margin-bottom: 20px; color: #fff;">Browser Not Supported</h2>
+          <p style="margin-bottom: 20px; line-height: 1.6;">
+            You are currently using <strong>${browserInfo.browserName}</strong>.
+            <br><br>
+            This application requires <strong>Google Chrome</strong> for optimal functionality and security.
+          </p>
+          <div style="
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #4CAF50;
+          ">
+            <h3 style="margin: 0 0 10px 0; color: #4CAF50;">Why Chrome Only?</h3>
+            <ul style="text-align: left; margin: 0; padding-left: 20px;">
+              <li>Better geolocation accuracy</li>
+              <li>Enhanced security features</li>
+              <li>Consistent performance</li>
+              <li>Optimal compatibility</li>
+            </ul>
+          </div>
+          <div style="margin-top: 30px;">
+            <a href="https://www.google.com/chrome/" target="_blank" style="
+              background: #4CAF50;
+              color: white;
+              padding: 12px 24px;
+              text-decoration: none;
+              border-radius: 25px;
+              display: inline-block;
+              margin: 0 10px;
+              transition: all 0.3s ease;
+            " onmouseover="this.style.background='#45a049'" onmouseout="this.style.background='#4CAF50'">
+              Download Chrome
+            </a>
+            <button onclick="logout()" style="
+              background: rgba(255,255,255,0.2);
+              color: white;
+              padding: 12px 24px;
+              border: none;
+              border-radius: 25px;
+              cursor: pointer;
+              margin: 0 10px;
+              transition: all 0.3s ease;
+            " onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+              Logout
+            </button>
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(overlay);
+      return false;
+    }
+    
+    return true;
+  }
 
   // ============ Block access if not logged in ============ 
 
   document.addEventListener("DOMContentLoaded", () => {
+    // Check browser first
+    if (!showChromeOnlyMessage()) {
+      return; // Stop execution if not Chrome
+    }
+    
     const token = localStorage.getItem("token");
     const role = localStorage.getItem("role");
 
     if (!token || role !== "teacher") {
       alert("Unauthorized access. Please log in.");
-      window.location.href = "login.html";
+      window.location.href = "index.html";
     }
 
     // ============ Prevent going back to dashboard after logout ============ 
@@ -209,6 +412,10 @@
         <i class="fas fa-users"></i>
         <span>View Students</span>
       </li>
+      <li onclick="showSection('archived-slots')" title="Archived Slots">
+        <i class="fas fa-archive"></i>
+        <span>Archived Slots</span>
+      </li>
       <li onclick="showSection('attendance-setup')" title="Attendance Setup">
         <i class="fas fa-map-marker-alt"></i>
         <span>Attendance</span>
@@ -216,6 +423,10 @@
       <li onclick="showSection('download')" title="Download Sheet">
         <i class="fas fa-file-download"></i>
         <span>Download</span>
+      </li>
+      <li onclick="showSection('developers')" title="Developers">
+        <i class="fas fa-code"></i>
+        <span>Developers</span>
       </li>
       <li onclick="logout()" title="Logout">
         <i class="fas fa-sign-out-alt"></i>
@@ -276,8 +487,23 @@
 
     <button onclick="deleteAllInSlot()">Delete All Students in Selected Slot</button>
 
+    <button onclick="archiveSlot()" style="background: linear-gradient(to right, #ff9800, #f57c00);">Archive Slot</button>
 
     <div id="studentList">Loading...</div>
+
+  </div>
+
+  <!-- ============ Archived Slots ============ -->
+
+  <div id="archived-slots" class="section container">
+    <h3>Archived Slots</h3>
+
+    <label for="archivedSlotFilter">Filter by Archived Slot</label>
+    <select id="archivedSlotFilter" onchange="fetchArchivedStudentsBySlot()">
+      <option value="">-- Select Archived Slot --</option>
+    </select>
+
+    <div id="archivedStudentList">Loading...</div>
 
   </div>
 
@@ -287,9 +513,14 @@
   <div id="attendance-setup" class="section container">
     <h3>Attendance Setup</h3>
 
-    <label>Select Slot</label>
-    <select id="attendanceSlot">
+    <label>Select Main Slot</label>
+    <select id="attendanceSlot" onchange="handleMainSlotChange()">
       <option value="">-- Select Slot --</option>
+    </select>
+
+    <label>Select Individual Slot</label>
+    <select id="individualSlot">
+      <option value="">-- Select Individual Slot --</option>
     </select>
 
     <label>Allowed Radius (in meters)</label>
@@ -310,6 +541,10 @@
     <button onclick="saveAttendanceSettings()">Save Settings</button>
 
     <p id="radiusSavedMsg" style="margin-top: 10px; color: #4caf50;"></p>
+    <div id="live-count-section" style="display:none; margin-top:20px; padding:15px; background:#f5faff; border-radius:8px; color:#0072ff; font-weight:bold;">
+      <span id="live-count-loading">Loading live attendance count...</span>
+      <span id="live-count-display" style="display:none;"></span>
+    </div>
   </div>
 
 
@@ -319,15 +554,52 @@
   <div id="download" class="section container">
     <h3>Download Attendance Sheet</h3>
 
-    <label for="downloadSlot">Select Slot</label>
-    <select id="downloadSlot">
-      <option value="">-- Select Slot --</option>
+    <label for="downloadMainSlot">Select Main Slot</label>
+    <select id="downloadMainSlot" onchange="handleDownloadMainSlotChange()">
+      <option value="">-- Select Main Slot --</option>
     </select>
 
-    <button onclick="downloadAttendance('present')">Download Present List</button>
-    <button onclick="downloadAttendance('absent')">Download Absent List</button>
+    <label for="downloadIndividualSlot">Select Individual Slot</label>
+    <select id="downloadIndividualSlot">
+      <option value="">-- Select Individual Slot --</option>
+    </select>
 
+    <label for="downloadDate">Select Date</label>
+    <input type="date" id="downloadDate" />
 
+    <button onclick="downloadSheet()">Download Report</button>
+
+    <p id="download-message"></p>
+  </div>
+
+  <!-- ============ Developers Section ============ -->
+  
+  <div id="developers" class="section container">
+    <h3><i class="fas fa-users dev-icon"></i> About the Developers</h3>
+    <p><strong>Project:</strong> Attendance Management System</p>
+    <p><strong>Version:</strong> 1.0.0</p>
+    <p><strong>Description:</strong> A modern, secure, and location-based attendance system for educational institutions.</p>
+    <h4><i class="fas fa-user-friends dev-icon"></i> Developers</h4>
+    <ul>
+      <li><strong>Shubham Raj Sharma (22BCY10200)</strong> <span class="dev-role">Full Stack Developer</span> (<a href="mailto:shubhamraj100802@gmail.com">Email</a>, <a href="https://www.linkedin.com/in/shubhamraj100802/" target="_blank">LinkedIn</a>)</li>
+      <li><strong>Dr. Sajjad Ahmed Sir</strong> <span class="dev-role">Project Guide</span></li>
+    </ul>
+    <h4><i class="fas fa-cogs dev-icon"></i> Tech Stack</h4>
+    <ul class="dev-stack">
+      <li><i class="fab fa-node-js dev-icon"></i>Node.js</li>
+      <li><i class="fas fa-server dev-icon"></i>Express.js</li>
+      <li><i class="fas fa-database dev-icon"></i>MongoDB, Mongoose</li>
+      <li><i class="fab fa-html5 dev-icon"></i>HTML</li>
+      <li><i class="fab fa-css3-alt dev-icon"></i>CSS</li>
+      <li><i class="fab fa-js dev-icon"></i>JavaScript</li>
+      <li><i class="fas fa-key dev-icon"></i>JWT, bcryptjs</li>
+      <li><i class="fas fa-file-excel dev-icon"></i>xlsx</li>
+    </ul>
+    <h4><i class="fas fa-envelope dev-icon"></i> Contact & Support</h4>
+    <p class="dev-contact">For support or feedback, contact 
+      <a href="mailto:shubhamraj100802@gmail.com"><i class="fas fa-envelope" style="color:#0072ff;"></i> Email</a> &nbsp;|&nbsp; 
+      <a href="https://www.instagram.com/itsmeshubh2026?igsh=MW51dXh1ZHc4bjY5Ng==" target="_blank" style="color:#E1306C;"><i class="fab fa-instagram"></i> Instagram</a>
+    </p>
   </div>
 
 </body>
@@ -382,12 +654,21 @@
     }
 
     if (sectionId === "download") {
-      populateDownloadSlots();
+      populateDownloadMainSlots();
     }
 
     if (sectionId === "view-students") {
       fetchSlots();
       fetchStudentsBySlot();
+    }
+
+    if (sectionId === "archived-slots") {
+      fetchArchivedSlots();
+      fetchArchivedStudentsBySlot();
+    }
+
+    if (sectionId === "developers") {
+      // No special logic needed, just show the section
     }
   }
 
@@ -397,7 +678,7 @@
     localStorage.removeItem("token");
     localStorage.removeItem("role");
     alert("Logging out...");
-    window.location.href = "login.html";
+    window.location.href = "index.html";
   }
 
   function downloadExcel() {
@@ -449,7 +730,7 @@
 
     if (!token || role !== "teacher") {
       alert("Unauthorized access. Please log in as a teacher.");
-      window.location.href = "login.html";
+      window.location.href = "index.html";
       return;
     }
 
@@ -551,7 +832,6 @@
 
     const url = `${API_BASE_URL}/teacher/students?slot=${encodeURIComponent(selectedSlot)}`;
 
-
     try {
       const res = await fetch(url, {
         headers: {
@@ -568,23 +848,34 @@
         return;
       }
 
+      // Render as table
+      let tableHtml = `<table style="width:100%;border-collapse:collapse;table-layout: fixed;">
+        <thead>
+          <tr style="background:#e6f7ff;color:#0072ff;">
+            <th style="padding:8px;">Reg No</th>
+            <th style="padding:8px;">Name</th>
+            <th style="padding:8px;">Email</th>
+            <th style="padding:8px;">Active Slots</th>
+            <th style="padding:8px;">Archived Slots</th>
+            <th style="padding:8px;">Action</th>
+          </tr>
+        </thead>
+        <tbody>`;
       students.forEach((stu, index) => {
-        const div = document.createElement('div');
-        div.style.marginBottom = '10px';
-        div.style.padding = '10px';
-        div.style.border = '1px solid #ffffff22';
-        div.style.borderRadius = '6px';
-
-        div.innerHTML = `
-        <strong>${index + 1}. ${stu.name}</strong><br>
-        Email: ${stu.email}<br>
-        RegNo: ${stu.regNo}<br>
-        Slot: ${Array.isArray(stu.slot) ? stu.slot.join(", ") : stu.slot}
-        <button onclick="deleteStudent('${stu.regNo}')">Delete</button>
-      `;
-
-        container.appendChild(div);
+        const activeSlots = Array.isArray(stu.slot) ? stu.slot.join(", ") : stu.slot || "None";
+        const archivedSlots = Array.isArray(stu.archivedSlots) ? stu.archivedSlots.join(", ") : stu.archivedSlots || "None";
+        
+        tableHtml += `<tr style="border-bottom:1px solid #ffffff22;">
+          <td style="padding: 12px 8px; vertical-align: middle;">${stu.regNo}</td>
+          <td style="padding: 12px 8px; vertical-align: middle; word-wrap: break-word;">${stu.name}</td>
+          <td style="padding: 12px 8px; vertical-align: middle; word-wrap: break-word;">${stu.email}</td>
+          <td style="padding: 12px 8px; vertical-align: middle; word-wrap: break-word;">${activeSlots}</td>
+          <td style="padding: 12px 8px; vertical-align: middle; word-wrap: break-word;">${archivedSlots}</td>
+          <td style="padding: 12px 8px; vertical-align: middle;"><button onclick=\"deleteStudent('${stu.regNo}')\">Delete</button></td>
+        </tr>`;
       });
+      tableHtml += '</tbody></table>';
+      container.innerHTML = tableHtml;
     } catch (err) {
       console.error(' Error fetching students:', err);
       document.getElementById('studentList').innerHTML = 'Error loading students.';
@@ -595,10 +886,11 @@
   // ============= Delete Student by name ============
 
   async function deleteStudent(regNo) {
-    if (!confirm(`Delete student with RegNo: ${regNo}?`)) return;
+    const selectedSlot = document.getElementById('slotFilter').value;
+    if (!confirm(`Delete student with RegNo: ${regNo} from slot: ${selectedSlot}?`)) return;
 
     try {
-      const res = await fetch(`${API_BASE_URL}/teacher/students/${regNo}`, {
+      const res = await fetch(`${API_BASE_URL}/teacher/students/${regNo}?slot=${encodeURIComponent(selectedSlot)}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -641,23 +933,191 @@
     }
   }
 
+  // ============ Archive Slot ============
+
+  async function archiveSlot() {
+    const selectedSlot = document.getElementById('slotFilter').value;
+    if (!selectedSlot) return alert('Please select a slot first.');
+
+    if (!confirm(`Archive all students from slot: ${selectedSlot}?`)) return;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/teacher/archive-slot/${encodeURIComponent(selectedSlot)}`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        alert(data.message || 'Slot archived successfully');
+        fetchSlots();
+        fetchStudentsBySlot();
+      } else {
+        alert(data.message || 'Failed to archive slot');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error archiving slot');
+    }
+  }
+
+  // ============ Fetch Archived Slots ============
+
+  async function fetchArchivedSlots() {
+    try {
+      const res = await fetch(`${API_BASE_URL}/teacher/archived-slots`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      const slots = await res.json();
+      const slotDropdown = document.getElementById('archivedSlotFilter');
+
+      slotDropdown.innerHTML = '<option value="">-- Select Archived Slot --</option>';
+
+      slots.forEach(slot => {
+        const option = document.createElement('option');
+        option.value = slot;
+        option.innerText = slot;
+        slotDropdown.appendChild(option);
+      });
+    } catch (err) {
+      console.error('Error fetching archived slots:', err);
+    }
+  }
+
+  // ============ Fetch Archived Students by Slot ============
+
+  async function fetchArchivedStudentsBySlot() {
+    const selectedSlot = document.getElementById('archivedSlotFilter').value;
+    if (!selectedSlot) {
+      document.getElementById('archivedStudentList').innerHTML = '<p>Please select an archived slot to view students.</p>';
+      return;
+    }
+
+    const url = `${API_BASE_URL}/teacher/archived-students?slot=${encodeURIComponent(selectedSlot)}`;
+
+    try {
+      const res = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+
+      const students = await res.json();
+      const container = document.getElementById('archivedStudentList');
+      container.innerHTML = '';
+
+      if (students.length === 0) {
+        container.innerHTML = '<p>No archived students found for this slot.</p>';
+        return;
+      }
+
+      // Render as table with unarchive button
+      let tableHtml = `<table style="width:100%;border-collapse:collapse;table-layout: fixed;">
+        <thead>
+          <tr style="background:#e6f7ff;color:#0072ff;">
+            <th style="padding:8px;">Reg No</th>
+            <th style="padding:8px;">Name</th>
+            <th style="padding:8px;">Email</th>
+            <th style="padding:8px;">Active Slots</th>
+            <th style="padding:8px;">Archived Slots</th>
+            <th style="padding:8px;">Action</th>
+          </tr>
+        </thead>
+        <tbody>`;
+      students.forEach((stu, index) => {
+        const activeSlots = Array.isArray(stu.slot) ? stu.slot.join(", ") : stu.slot || "None";
+        const archivedSlots = Array.isArray(stu.archivedSlots) ? stu.archivedSlots.join(", ") : stu.archivedSlots || "None";
+        
+        tableHtml += `<tr style="border-bottom:1px solid #ffffff22;">
+          <td style="padding: 12px 8px; vertical-align: middle;">${stu.regNo}</td>
+          <td style="padding: 12px 8px; vertical-align: middle; word-wrap: break-word;">${stu.name}</td>
+          <td style="padding: 12px 8px; vertical-align: middle; word-wrap: break-word;">${stu.email}</td>
+          <td style="padding: 12px 8px; vertical-align: middle; word-wrap: break-word;">${activeSlots}</td>
+          <td style="padding: 12px 8px; vertical-align: middle; word-wrap: break-word;">${archivedSlots}</td>
+          <td style="padding: 12px 8px; vertical-align: middle;"><button onclick=\"unarchiveStudent('${stu.regNo}')\" style="background: linear-gradient(to right, #4caf50, #45a049);">Unarchive</button></td>
+        </tr>`;
+      });
+      tableHtml += '</tbody></table>';
+      container.innerHTML = tableHtml;
+    } catch (err) {
+      console.error('Error fetching archived students:', err);
+      document.getElementById('archivedStudentList').innerHTML = 'Error loading archived students.';
+    }
+  }
+
+  // ============ Unarchive Student ============
+
+  async function unarchiveStudent(regNo) {
+    const selectedSlot = document.getElementById('archivedSlotFilter').value;
+    if (!confirm(`Unarchive student with RegNo: ${regNo} from slot: ${selectedSlot}?`)) return;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/teacher/unarchive-student/${regNo}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({ slot: selectedSlot }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        alert(data.message || 'Student unarchived successfully');
+        fetchArchivedStudentsBySlot();
+        fetchArchivedSlots();
+      } else {
+        alert(data.message || 'Failed to unarchive student');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error unarchiving student');
+    }
+  }
+
 </script>
 
 <script>
   // ============ Attendance Settings ============
 
+  function handleMainSlotChange() {
+    const mainSlot = document.getElementById("attendanceSlot").value;
+    const individualSlotDropdown = document.getElementById("individualSlot");
+    
+    // Clear existing options
+    individualSlotDropdown.innerHTML = '<option value="">-- Select Individual Slot --</option>';
+    
+    if (mainSlot) {
+      // Split the main slot into individual slots
+      let individualSlots = mainSlot.split(/[\+\-]/).map(s => s.trim()).filter(Boolean);
+      
+      // Add each individual slot as an option
+      individualSlots.forEach(slot => {
+        const option = document.createElement("option");
+        option.value = slot;
+        option.innerText = slot;
+        individualSlotDropdown.appendChild(option);
+      });
+    }
+  }
+
   function saveAttendanceSettings() {
-    const slot = document.getElementById("attendanceSlot").value;
+    const mainSlot = document.getElementById("attendanceSlot").value;
+    const individualSlot = document.getElementById("individualSlot").value;
     const radius = document.getElementById("radiusInput").value;
     const latitude = document.getElementById("latitude").value;
     const longitude = document.getElementById("longitude").value;
     const startTime = document.getElementById("startTimeInput").value;
     const endTime = document.getElementById("endTimeInput").value;
 
-    const selectedSlot = document.getElementById("attendanceSlot").value;
-    if (!selectedSlot) return alert("Please select a slot for attendance");
-
-    console.log("🔍 Submitting with:", { slot, radius, latitude, longitude, startTime, endTime });
+    if (!mainSlot || !individualSlot) {
+      alert("Please select both main slot and individual slot");
+      return;
+    }
 
     if (!radius || !startTime || !endTime || !latitude || !longitude) {
       alert("Please complete all fields, including location.");
@@ -665,7 +1125,16 @@
     }
 
     const today = new Date().toISOString().split('T')[0];
-    const data = { radius, latitude, longitude, startTime, endTime, slot: selectedSlot, date: today };
+    const data = { 
+      radius, 
+      latitude, 
+      longitude, 
+      startTime, 
+      endTime, 
+      mainSlot,
+      individualSlot,
+      date: today 
+    };
 
     fetch(`${API_BASE_URL}/teacher/attendance-settings`, {
       method: "POST",
@@ -679,9 +1148,11 @@
       .then(data => {
         document.getElementById("radiusSavedMsg").innerText =
           data.message || "Attendance settings saved!";
+        // Show live count section and start polling
+        showLiveCount(mainSlot, individualSlot);
       })
       .catch(err => {
-        console.error(" Error saving settings:", err);
+        console.error("Error saving settings:", err);
         alert("Something went wrong.");
       });
   }
@@ -707,15 +1178,11 @@
     }
   }
 
-
-
-
-
 </script>
 
 <script>
   // Populate slot dropdown
-  async function populateDownloadSlots() {
+  async function populateDownloadMainSlots() {
     try {
       const res = await fetch(`${API_BASE_URL}/teacher/slots`, {
         headers: {
@@ -723,161 +1190,119 @@
         }
       });
       const slots = await res.json();
-      const slotDropdown = document.getElementById("downloadSlot");
+      const slotDropdown = document.getElementById("downloadMainSlot");
 
-      slotDropdown.innerHTML = '<option value="">-- Select Slot --</option>';
+      slotDropdown.innerHTML = '<option value="">-- Select Main Slot --</option>';
       slots.forEach(slot => {
-        const opt = document.createElement("option");
-        opt.value = slot;
-        opt.innerText = slot;
-        slotDropdown.appendChild(opt);
+        const option = document.createElement('option');
+        option.value = slot;
+        option.innerText = slot;
+        slotDropdown.appendChild(option);
       });
     } catch (err) {
       console.error("Failed to fetch slots", err);
     }
   }
 
-  // Call when download section opens
-  function showSection(sectionId) {
-    document.querySelectorAll(".section").forEach(section => {
-      section.classList.remove("active");
-    });
-    document.getElementById(sectionId).classList.add("active");
-
-    if (sectionId === "download") {
-      populateDownloadSlots();
-    }
-    if (sectionId === "view-students") {
-      fetchSlots();
-      fetchStudentsBySlot();
+  function handleDownloadMainSlotChange() {
+    const mainSlot = document.getElementById('downloadMainSlot').value;
+    const individualSlotDropdown = document.getElementById('downloadIndividualSlot');
+    individualSlotDropdown.innerHTML = '<option value="">-- Select Individual Slot --</option>';
+    
+    if (mainSlot) {
+      const individualSlots = mainSlot.split('+');
+      individualSlots.forEach(slot => {
+        const option = document.createElement("option");
+        option.value = slot.trim();
+        option.textContent = slot.trim();
+        individualSlotDropdown.appendChild(option);
+      });
     }
   }
 
-  // Download Attendance
-  async function downloadAttendance(type) {
-    const slot = document.getElementById("downloadSlot").value;
-    if (!slot) return alert("Please select a slot.");
+  // ============ Download Sheet Function ============
+  async function downloadSheet() {
+    const mainSlot = document.getElementById('downloadMainSlot').value;
+    const individualSlot = document.getElementById('downloadIndividualSlot').value;
+    const date = document.getElementById('downloadDate').value;
+    const messageDiv = document.getElementById('download-message');
+    const token = localStorage.getItem('token');
+
+    if (!mainSlot || !individualSlot || !date) {
+      messageDiv.textContent = 'Please select a main slot, individual slot, and a date.';
+      messageDiv.style.color = '#ff4f4f';
+      return;
+    }
+    messageDiv.textContent = 'Generating report...';
+    messageDiv.style.color = '#ccc';
 
     try {
-      const res = await fetch(`${API_BASE_URL}/teacher/download-attendance?slot=${encodeURIComponent(slot)}&type=${type}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
+      const res = await fetch(`${API_BASE_URL}/teacher/attendance-report?mainSlot=${encodeURIComponent(mainSlot)}&individualSlot=${encodeURIComponent(individualSlot)}&date=${date}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
       });
 
       if (!res.ok) {
-        alert("Failed to download file.");
-        return;
+        const errorData = await res.json();
+        throw new Error(errorData.message || 'Failed to download report.');
       }
 
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
-
-      const today = new Date().toISOString().split("T")[0];
       a.href = url;
-      a.download = `${slot}-${type}-list-${today}.xlsx`;
+      a.download = `Attendance-${mainSlot.replace(/\+/g, '_')}-${individualSlot}-${date}.xlsx`;
       document.body.appendChild(a);
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
+      
+      messageDiv.textContent = 'Report downloaded successfully!';
+      messageDiv.style.color = '#4caf50';
 
-      alert(` ${type.charAt(0).toUpperCase() + type.slice(1)} list downloaded!`);
     } catch (err) {
       console.error("Download error:", err);
-      alert("Something went wrong while downloading.");
+      messageDiv.textContent = `Error: ${err.message}`;
+      messageDiv.style.color = '#ff4f4f';
     }
   }
 
 </script>
 
 <script>
-  // ============ Geolocation and radius ============
-
-  function saveRadius() {
-    const radius = document.getElementById("radiusInput").value;
-    const startTime = "08:00";
-    const endTime = "20:00";
-
-    if (!radius || radius <= 0) {
-      alert("Please enter a valid radius.");
-      return;
-    }
-
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const latitude = position.coords.latitude;
-          const longitude = position.coords.longitude;
-
-          try {
-            const res = await fetch(`${API_BASE_URL}/teacher/attendance-settings`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
-              },
-              body: JSON.stringify({ radius, latitude, longitude, startTime, endTime }),
-            });
-
-            const data = await res.json();
-
-            if (res.ok) {
-              document.getElementById("radiusSavedMsg").innerText = data.message;
-            } else {
-              alert(data.message || "Failed to save settings.");
-            }
-          } catch (err) {
-            console.error("Error saving settings:", err);
-            alert("Something went wrong.");
-          }
-        },
-        () => {
-          alert(" Failed to get location. Please allow location access.");
+  let liveCountInterval = null;
+  function showLiveCount(mainSlot, individualSlot) {
+    const section = document.getElementById('live-count-section');
+    const loading = document.getElementById('live-count-loading');
+    const display = document.getElementById('live-count-display');
+    section.style.display = 'block';
+    loading.style.display = 'inline';
+    display.style.display = 'none';
+    if (liveCountInterval) clearInterval(liveCountInterval);
+    async function fetchLiveCount() {
+      try {
+        const res = await fetch(`${API_BASE_URL}/teacher/attendance-live-count?mainSlot=${encodeURIComponent(mainSlot)}&individualSlot=${encodeURIComponent(individualSlot)}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+        const data = await res.json();
+        if (res.ok) {
+          loading.style.display = 'none';
+          display.style.display = 'inline';
+          display.innerHTML = `Present: <span style='color:green;'>${data.present}</span> / Total: <span style='color:blue;'>${data.total}</span> &nbsp; | &nbsp; Absent: <span style='color:red;'>${data.absent}</span>`;
+        } else {
+          loading.style.display = 'inline';
+          display.style.display = 'none';
+          loading.textContent = data.message || 'Error loading live count';
         }
-      );
-    } else {
-      alert("Geolocation not supported.");
-    }
-  }
-
-</script>
-
-<script>
-document.addEventListener("DOMContentLoaded", async () => {
-  const slotDropdown = document.getElementById("attendanceSlot");
-
-  try {
-    const res = await fetch(`${API_BASE_URL}/teacher/slots`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`
+      } catch (err) {
+        loading.style.display = 'inline';
+        display.style.display = 'none';
+        loading.textContent = 'Error loading live count';
       }
-    });
-    const slots = await res.json();
-
-    // Clear previous options if needed
-    slotDropdown.innerHTML = '<option value="">-- Select Slot --</option>';
-
-    if (Array.isArray(slots)) {
-    slots.forEach((slot) => {
-      const option = document.createElement("option");
-      option.value = slot;
-      option.textContent = slot;
-      slotDropdown.appendChild(option);
-    });
-    } else {
-      console.error(" Expected slots to be an array but got:", slots);
     }
-  } catch (err) {
-    console.error(" Failed to load slots:", err);
-    alert("Failed to load slots for attendance setup.");
+    fetchLiveCount();
+    liveCountInterval = setInterval(fetchLiveCount, 2000);
   }
-});
 </script>
 
-
-
-
-
-
+</body>
 </html>

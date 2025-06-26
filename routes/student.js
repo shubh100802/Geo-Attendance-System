@@ -5,6 +5,7 @@ const Student = require('../models/Student');
 const jwt = require('jsonwebtoken');
 const Attendance = require('../models/Attendance');
 const verifyToken = require('../middleware/auth');
+const bcrypt = require('bcrypt');
 
 const nowIST = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
 
@@ -27,11 +28,10 @@ function authenticateToken(req, res, next) {
 // ============ POST /student/validate-location ============
 router.post('/validate-location', authenticateToken, async (req, res) => {
   try {
-    const { latitude, longitude, slot } = req.body;
-    console.log(" Received body:", req.body);
+    const { latitude, longitude, mainSlot, individualSlot } = req.body;
+    console.log("Received body:", req.body);
 
-
-     if (!latitude || !longitude || !slot) {
+    if (!latitude || !longitude || !mainSlot || !individualSlot) {
       return res.status(400).json({ allowed: false, message: "Missing data" });
     }
 
@@ -42,15 +42,33 @@ router.post('/validate-location', authenticateToken, async (req, res) => {
     }
 
     // Now find attendance settings set by *that teacher*
-    const setting = await AttendanceSetting.findOne({ createdBy: student.createdBy, slot });
+    const setting = await AttendanceSetting.findOne({ 
+      createdBy: student.createdBy, 
+      mainSlot,
+      individualSlot 
+    });
 
     if (!setting || !setting.latitude || !setting.longitude || !setting.radius) {
-      return res.status(400).json({ allowed: false, message: " Teacher has not set attendance location yet." });
+      return res.status(400).json({ allowed: false, message: "Teacher has not set attendance location yet." });
     }
 
     const allowedLat = setting.latitude;
     const allowedLng = setting.longitude;
     const radius = setting.radius;
+
+    // Time window check (IST)
+    const currentTime = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+    const [startHour, startMinute] = setting.startTime.split(':').map(Number);
+    const [endHour, endMinute] = setting.endTime.split(':').map(Number);
+    const currentHour = currentTime.getHours();
+    const currentMinute = currentTime.getMinutes();
+    const isWithinTimeWindow = (
+      (currentHour > startHour || (currentHour === startHour && currentMinute >= startMinute)) &&
+      (currentHour < endHour || (currentHour === endHour && currentMinute <= endMinute))
+    );
+    if (!isWithinTimeWindow) {
+      return res.json({ allowed: false, message: `Attendance can only be marked between ${setting.startTime} and ${setting.endTime}` });
+    }
 
     const toRad = (val) => val * Math.PI / 180;
     const earthRadius = 6371000;
@@ -93,13 +111,13 @@ router.get('/my-slot', authenticateToken, async (req, res) => {
 // ============ POST /student/mark-attendance ============
 router.post('/mark-attendance', authenticateToken, async (req, res) => {
   try {
-    const { slot } = req.body;
+    const { mainSlot, individualSlot } = req.body;
     // Convert current time to IST (UTC+5:30)
     const currentTime = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
     const currentDate = currentTime.toISOString().split('T')[0];
 
-    if (!slot) {
-      return res.status(400).json({ message: "Slot is required" });
+    if (!mainSlot || !individualSlot) {
+      return res.status(400).json({ message: "Main slot and individual slot are required" });
     }
 
     // Get student details
@@ -111,7 +129,8 @@ router.post('/mark-attendance', authenticateToken, async (req, res) => {
     // Get attendance settings
     const setting = await AttendanceSetting.findOne({ 
       createdBy: student.createdBy, 
-      slot 
+      mainSlot,
+      individualSlot 
     });
 
     if (!setting) {
@@ -138,14 +157,16 @@ router.post('/mark-attendance', authenticateToken, async (req, res) => {
 
     // Find or create attendance record for today
     let attendance = await Attendance.findOne({ 
-      slot, 
+      mainSlot,
+      individualSlot,
       date: currentDate,
       createdBy: student.createdBy
     });
 
     if (!attendance) {
       attendance = new Attendance({
-        slot,
+        mainSlot,
+        individualSlot,
         date: currentDate,
         present: [],
         createdBy: student.createdBy
@@ -168,83 +189,124 @@ router.post('/mark-attendance', authenticateToken, async (req, res) => {
   }
 });
 
-// ============ GET /teacher/download-attendance ============
-
-router.get("/download-attendance", verifyToken, async (req, res) => {
-  try {
-    const slot = req.query.slot;
-    const type = req.query.type; // "present" or "absent"
-    const dateString = new Date().toISOString().split("T")[0];
-
-    if (!slot || !type) {
-      return res.status(400).json({ message: "Slot and type are required" });
-    }
-
-    // Find attendance record for today, filtered by the teacher's ID
-    const attendance = await Attendance.findOne({ 
-      slot, 
-      date: dateString,
-      createdBy: req.userId 
-    });
-
-    const students = await Student.find({ slot });
-
-    let dataToExport = [];
-
-    if (type === "present") {
-      const presentSet = new Set(attendance?.present || []);
-      dataToExport = students
-        .filter((s) => presentSet.has(s.regNo))
-        .map((s) => ({
-          Name: s.name,
-          Email: s.email,
-          RegNo: s.regNo,
-          Slot: s.slot,
-          Date: dateString,
-          Status: "Present",
-        }));
-    } else if (type === "absent") {
-      const presentSet = new Set(attendance?.present || []);
-      dataToExport = students
-        .filter((s) => !presentSet.has(s.regNo))
-        .map((s) => ({
-          Name: s.name,
-          Email: s.email,
-          RegNo: s.regNo,
-          Slot: s.slot,
-          Date: dateString,
-          Status: "Absent",
-        }));
-    }
-
-    res.json(dataToExport);
-  } catch (err) {
-    console.error("Error downloading attendance:", err);
-    res.status(500).json({ message: "Server error while downloading attendance" });
-  }
-});
-
 // ============ GET /student/attendance-history ============
 router.get('/attendance-history', authenticateToken, async (req, res) => {
   try {
+    const { mainSlot } = req.query;
     const student = await Student.findById(req.userId);
     if (!student) return res.status(404).json({ message: "Student not found" });
 
+    // Find all attendance records for the student's slots
     const records = await Attendance.find({
-      slot: { $in: Array.isArray(student.slot) ? student.slot : [student.slot] },
-      createdBy: student.createdBy
+      mainSlot,
+      createdBy: student.createdBy,
+      present: student.regNo
     }).sort({ date: -1 });
 
     const history = records.map(rec => ({
       date: rec.date,
-      slot: rec.slot,
-      status: rec.present.includes(student.regNo) ? "Present" : "Absent"
+      individualSlot: rec.individualSlot,
+      status: "Present"
     }));
 
-    res.json({ history });
+    // Also find records where student was absent
+    const absentRecords = await Attendance.find({
+      mainSlot,
+      createdBy: student.createdBy,
+      date: { $in: records.map(r => r.date) },
+      present: { $ne: student.regNo }
+    });
+
+    // Add absent records to history
+    absentRecords.forEach(rec => {
+      if (!history.some(h => h.date === rec.date && h.individualSlot === rec.individualSlot)) {
+        history.push({
+          date: rec.date,
+          individualSlot: rec.individualSlot,
+          status: "Absent"
+        });
+      }
+    });
+
+    // Sort by date and take last 10
+    const sortedHistory = history
+      .sort((a, b) => new Date(b.date) - new Date(a.date))
+      .slice(0, 10);
+
+    res.json({ history: sortedHistory });
   } catch (err) {
     console.error("Error fetching attendance history:", err);
     res.status(500).json({ message: "Server error while fetching history" });
+  }
+});
+
+// ============ POST /student/change-password ============
+
+router.post("/change-password", verifyToken, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const studentId = req.userId;
+
+    // Find the student
+    const student = await Student.findById(studentId);
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    // Verify current password
+    const isMatch = await bcrypt.compare(currentPassword, student.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Current password is incorrect" });
+    }
+
+    // Hash new password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    // Update password
+    student.password = hashedPassword;
+    await student.save();
+
+    res.json({ message: "Password changed successfully" });
+  } catch (err) {
+    console.error("Change password error:", err);
+    res.status(500).json({ message: "Failed to change password" });
+  }
+});
+
+// ============ GET /student/attendance-time-window ============
+router.get('/attendance-time-window', verifyToken, async (req, res) => {
+  try {
+    const { mainSlot, individualSlot } = req.query;
+
+    if (!mainSlot || !individualSlot) {
+      return res.status(400).json({ message: "Both main and individual slots are required." });
+    }
+
+    const student = await Student.findById(req.userId);
+    if (!student) {
+      return res.status(404).json({ message: "Student not found." });
+    }
+
+    const setting = await AttendanceSetting.findOne({ 
+      createdBy: student.createdBy, 
+      mainSlot,
+      individualSlot 
+    });
+
+    if (!setting) {
+      return res.status(404).json({ message: "Attendance settings not found for this slot." });
+    }
+
+    res.json({
+      startTime: setting.startTime,
+      endTime: setting.endTime,
+      serverTime: new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }))
+    });
+
+  } catch (err) {
+    console.error("Error fetching attendance time window:", err);
+    res.status(500).json({ message: "Server error" });
   }
 });
 

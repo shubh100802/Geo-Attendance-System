@@ -26,47 +26,18 @@ const settingSchema = new mongoose.Schema({
     ref: "User",
     required: true,
   },
-  slot: {
-  type: String,
-  required: true
-},
-deleteAt: { type: Date, index: { expireAfterSeconds: 0 } }
-});
-
-function saveAttendanceSettings() {
-  const radius = document.getElementById("radiusInput").value;
-  const latitude = document.getElementById("latitude").value;
-  const longitude = document.getElementById("longitude").value;
-  const startTime = document.getElementById("startTimeInput").value;
-  const endTime = document.getElementById("endTimeInput").value;
-  const slot = document.getElementById("slotSelect").value; 
-
-  if (!radius || !startTime || !endTime || !latitude || !longitude || !slot) {
-    alert("Please complete all fields including location and slot."); 
-    return;
+  mainSlot: {
+    type: String,
+    required: true
+  },
+  individualSlot: {
+    type: String,
+    required: true
+  },
+  deleteAt: { 
+    type: Date, 
+    index: { expireAfterSeconds: 0 } 
   }
-
-  const data = { radius, latitude, longitude, startTime, endTime, slot }; 
-
-  fetch("http://localhost:3000/teacher/attendance-settings", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${localStorage.getItem("token")}`,
-    },
-    body: JSON.stringify(data),
-  })
-    .then(res => res.json())
-    .then(data => {
-      document.getElementById("radiusSavedMsg").innerText =
-        data.message || "Attendance settings saved!";
-    })
-    .catch(err => {
-      console.error("Error saving settings:", err);
-      alert("Something went wrong.");
-    });
-}
-
-
+});
 
 module.exports = mongoose.model("AttendanceSetting", settingSchema);

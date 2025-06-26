@@ -16,8 +16,15 @@ async function createTeacher(teacherData) {
     // Check if teacher already exists
     const existingTeacher = await User.findOne({ email: teacherData.email });
     if (existingTeacher) {
-      console.log(` Teacher with email ${teacherData.email} already exists. Skipping...`);
-      return null;
+      // Update the name if different
+      if (existingTeacher.name !== teacherData.name) {
+        existingTeacher.name = teacherData.name;
+        await existingTeacher.save();
+        console.log(` Teacher with email ${teacherData.email} already exists. Name updated to ${teacherData.name}.`);
+      } else {
+        console.log(` Teacher with email ${teacherData.email} already exists. Skipping...`);
+      }
+      return existingTeacher;
     }
 
     // Generate username from email
@@ -53,7 +60,7 @@ async function addTeachers() {
         password: 'teacher123'
       },
       {
-        name: 'Mr.Sajjad Ahmed',
+        name: 'Dr. Sajjad Ahmed',
         email: 'sajjadahmed@vitbhopal.ac.in',
         password: 'Ahmed@2025'
       }

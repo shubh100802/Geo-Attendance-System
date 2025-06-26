@@ -243,27 +243,59 @@
 </head>
 
 <body>
+    <div id="dev-modal-overlay" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.55); z-index:2000; align-items:center; justify-content:center;">
+      <div id="dev-modal" style="background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%); color:#222; border-radius:18px; max-width:420px; width:90vw; padding:32px 24px 24px 24px; box-shadow:0 8px 32px rgba(0,0,0,0.18); position:relative;">
+        <button onclick="closeDevModal()" style="position:absolute; top:12px; right:18px; background:none; border:none; font-size:1.7em; color:#888; cursor:pointer;">&times;</button>
+        <h3 style="color:#0072ff; font-size:1.5em; margin-bottom:10px;"><i class="fas fa-users" style="margin-right:7px; color:#00c6ff;"></i>About the Developers</h3>
+        <p><strong>Project:</strong> Attendance Management System</p>
+        <p><strong>Version:</strong> 1.0.0</p>
+        <p><strong>Description:</strong> A modern, secure, and location-based attendance system for educational institutions.</p>
+        <h4 style="color:#00c6ff; margin-top:18px; margin-bottom:8px;"><i class="fas fa-user-friends" style="margin-right:7px;"></i>Developers</h4>
+        <ul style="padding-left:18px;">
+          <li><strong style="color:#0072ff;">Shubham Raj Sharma (22BCY10200)</strong> <span style="background:#e3f2fd; color:#0072ff; border-radius:8px; padding:2px 10px; font-size:0.95em; margin-left:8px;">Full Stack Developer</span> (<a href="mailto:shubhamraj100802@gmail.com" style="color:#00c6ff;">Email</a>, <a href="https://www.linkedin.com/in/shubhamraj100802/" target="_blank" style="color:#00c6ff;">LinkedIn</a>)</li>
+          <li><strong style="color:#0072ff;">Dr. Sajjad Ahmed Sir</strong> <span style="background:#e3f2fd; color:#0072ff; border-radius:8px; padding:2px 10px; font-size:0.95em; margin-left:8px;">Project Guide</span></li>
+        </ul>
+        <h4 style="color:#00c6ff; margin-top:18px; margin-bottom:8px;"><i class="fas fa-cogs" style="margin-right:7px;"></i>Tech Stack</h4>
+        <ul style="display:flex; flex-wrap:wrap; gap:10px 12px; margin-bottom:10px; padding-left:0;">
+          <li style="background:#f0f7ff; border-radius:6px; padding:4px 12px; color:#0072ff; font-size:0.98em;"><i class="fab fa-node-js" style="margin-right:7px;"></i>Node.js</li>
+          <li style="background:#f0f7ff; border-radius:6px; padding:4px 12px; color:#0072ff; font-size:0.98em;"><i class="fas fa-server" style="margin-right:7px;"></i>Express.js</li>
+          <li style="background:#f0f7ff; border-radius:6px; padding:4px 12px; color:#0072ff; font-size:0.98em;"><i class="fas fa-database" style="margin-right:7px;"></i>MongoDB, Mongoose</li>
+          <li style="background:#f0f7ff; border-radius:6px; padding:4px 12px; color:#0072ff; font-size:0.98em;"><i class="fab fa-html5" style="margin-right:7px;"></i>HTML</li>
+          <li style="background:#f0f7ff; border-radius:6px; padding:4px 12px; color:#0072ff; font-size:0.98em;"><i class="fab fa-css3-alt" style="margin-right:7px;"></i>CSS</li>
+          <li style="background:#f0f7ff; border-radius:6px; padding:4px 12px; color:#0072ff; font-size:0.98em;"><i class="fab fa-js" style="margin-right:7px;"></i>JavaScript</li>
+          <li style="background:#f0f7ff; border-radius:6px; padding:4px 12px; color:#0072ff; font-size:0.98em;"><i class="fas fa-key" style="margin-right:7px;"></i>JWT, bcryptjs</li>
+          <li style="background:#f0f7ff; border-radius:6px; padding:4px 12px; color:#0072ff; font-size:0.98em;"><i class="fas fa-file-excel" style="margin-right:7px;"></i>xlsx</li>
+        </ul>
+        <h4 style="color:#00c6ff; margin-top:18px; margin-bottom:8px;"><i class="fas fa-envelope" style="margin-right:7px;"></i>Contact & Support</h4>
+        <p style="margin-top:12px; color:black;">For support or feedback, contact 
+          <a href="mailto:shubhamraj100802@gmail.com" style="color:#00c6ff;"><i class="fas fa-envelope" style="color:#0072ff;"></i> Email</a> &nbsp;|&nbsp; 
+          <a href="https://www.instagram.com/itsmeshubh2026?igsh=MW51dXh1ZHc4bjY5Ng==" target="_blank" style="color:#E1306C;"><i class="fab fa-instagram"></i> Instagram</a>
+        </p>
+      </div>
+    </div>
     <div class="dashboard">
+        <div style="position:absolute; top:18px; right:24px; z-index:10;">
+            <i class="fas fa-user-cog" title="About Developers" style="font-size:1.5em; color:#00c6ff; cursor:pointer; transition:color 0.2s;" onclick="openDevModal()"></i>
+        </div>
         <h2 id="studentName">Welcome, Student</h2>
 
         <div class="info">Role: Student</div>
         <div id="message" class="message">Checking your location...</div>
         <div id="locationInfo" class="info"></div>
 
-
-        <label for="slot-select">Select Your Slot</label>
-        <select id="slot-select">
-            <option value="">-- Select Slot --</option>
-
-            <!-- dynamically loaded slots -->
-             
+        <label for="main-slot-select">Select Your Main Slot</label>
+        <select id="main-slot-select" onchange="handleMainSlotChange()">
+            <option value="">-- Select Main Slot --</option>
         </select>
 
+        <label for="individual-slot-select">Select Your Individual Slot</label>
+        <select id="individual-slot-select">
+            <option value="">-- Select Individual Slot --</option>
+        </select>
 
         <button id="mark-attendance-btn" onclick="markAttendance()">Mark Attendance</button>
         <button onclick="viewAttendanceHistory()">View Attendance History</button>
         <button onclick="logout()">Logout</button>
-
 
         <div id="attendance-message" class="message"></div>
 
@@ -276,13 +308,176 @@
                 <div id="history-content">Loading...</div>
             </div>
         </div>
-    </div>
 
+                <!-- Add Change Password Button -->
+                <button onclick="showChangePasswordModal()" style="background: linear-gradient(to right, #4CAF50, #45a049);">
+                    <i class="fas fa-key"></i> Change Password
+                </button>
+        
+                <!-- Change Password Modal -->
+                <div id="change-password-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center;">
+                    <div style="background: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 400px; position: relative;">
+                        <button onclick="hideChangePasswordModal()" style="position: absolute; right: 10px; top: 10px; background: none; border: none; color: #666; font-size: 20px; cursor: pointer;">×</button>
+                        <h3 style="color: #333; margin-bottom: 20px;">Change Password</h3>
+                        <div style="margin-bottom: 15px;">
+                            <label for="currentPassword" style="color: #333; display: block; margin-bottom: 5px;">Current Password</label>
+                            <div style="position: relative;">
+                                <input type="password" id="currentPassword" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; padding-right: 40px;">
+                                <i class="fas fa-eye" onclick="togglePasswordVisibility('currentPassword')" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #666;"></i>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label for="newPassword" style="color: #333; display: block; margin-bottom: 5px;">New Password</label>
+                            <div style="position: relative;">
+                                <input type="password" id="newPassword" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; padding-right: 40px;">
+                                <i class="fas fa-eye" onclick="togglePasswordVisibility('newPassword')" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #666;"></i>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 20px;">
+                            <label for="confirmPassword" style="color: #333; display: block; margin-bottom: 5px;">Confirm New Password</label>
+                            <div style="position: relative;">
+                                <input type="password" id="confirmPassword" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; padding-right: 40px;">
+                                <i class="fas fa-eye" onclick="togglePasswordVisibility('confirmPassword')" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #666;"></i>
+                            </div>
+                        </div>
+                        <button onclick="changePassword()" style="background: linear-gradient(to right, #4CAF50, #45a049); color: white; padding: 10px; border: none; border-radius: 4px; cursor: pointer; width: 100%;">Change Password</button>
+                        <div id="password-message" style="margin-top: 10px; color: #666;"></div>
+                    </div>
+                </div>
+    </div>
 
 </body>
 
 
 <script>
+    // Browser detection utility
+    function detectBrowser() {
+        const userAgent = navigator.userAgent;
+        
+        
+        const isChrome = /Chrome/.test(userAgent) && !/Edg/.test(userAgent) && !/OPR/.test(userAgent);
+        
+        return {
+            isChrome: isChrome,
+            browserName: getBrowserName(userAgent)
+        };
+    }
+
+    function getBrowserName(userAgent) {
+        if (/Edg/.test(userAgent)) {
+            return 'Edge';
+        }
+        if (/OPR/.test(userAgent) || /Opera/.test(userAgent)) {
+            return 'Opera';
+        }
+        if (/Firefox/.test(userAgent)) {
+            return 'Firefox';
+        }
+        if (/Chrome/.test(userAgent)) {
+            return 'Chrome';
+        }
+        if (/Safari/.test(userAgent)) {
+            return 'Safari';
+        }
+        return 'Unknown';
+    }
+
+    function showChromeOnlyMessage() {
+        const browserInfo = detectBrowser();
+        
+        if (!browserInfo.isChrome) {
+            
+            const overlay = document.createElement('div');
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.9);
+                z-index: 9999;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            `;
+            
+            overlay.innerHTML = `
+                <div style="
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    padding: 40px;
+                    border-radius: 20px;
+                    text-align: center;
+                    max-width: 500px;
+                    margin: 20px;
+                    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+                    color: white;
+                ">
+                    <div style="font-size: 48px; margin-bottom: 20px;">🚫</div>
+                    <h2 style="margin-bottom: 20px; color: #fff;">Browser Not Supported</h2>
+                    <p style="margin-bottom: 20px; line-height: 1.6;">
+                        You are currently using <strong>${browserInfo.browserName}</strong>.
+                        <br><br>
+                        This application requires <strong>Google Chrome</strong> for optimal functionality and security.
+                    </p>
+                    <div style="
+                        background: rgba(255,255,255,0.1);
+                        padding: 20px;
+                        border-radius: 10px;
+                        margin: 20px 0;
+                        border-left: 4px solid #4CAF50;
+                    ">
+                        <h3 style="margin: 0 0 10px 0; color: #4CAF50;">Why Chrome Only?</h3>
+                        <ul style="text-align: left; margin: 0; padding-left: 20px;">
+                            <li>Better geolocation accuracy</li>
+                            <li>Enhanced security features</li>
+                            <li>Consistent performance</li>
+                            <li>Optimal compatibility</li>
+                        </ul>
+                    </div>
+                    <div style="margin-top: 30px;">
+                        <a href="https://www.google.com/chrome/" target="_blank" style="
+                            background: #4CAF50;
+                            color: white;
+                            padding: 12px 24px;
+                            text-decoration: none;
+                            border-radius: 25px;
+                            display: inline-block;
+                            margin: 0 10px;
+                            transition: all 0.3s ease;
+                        " onmouseover="this.style.background='#45a049'" onmouseout="this.style.background='#4CAF50'">
+                            Download Chrome
+                        </a>
+                        <button onclick="logout()" style="
+                            background: rgba(255,255,255,0.2);
+                            color: white;
+                            padding: 12px 24px;
+                            border: none;
+                            border-radius: 25px;
+                            cursor: pointer;
+                            margin: 0 10px;
+                            transition: all 0.3s ease;
+                        " onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+                            Logout
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(overlay);
+            return false;
+        }
+        
+        return true;
+    }
+
+    // Check browser on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        if (!showChromeOnlyMessage()) {
+            return; 
+        }
+    });
+
     //  ========== Geo Locaion =========
 
     const message = document.getElementById("message");
@@ -320,11 +515,8 @@
     // ============ Load Slots from Backend ============
 
     const slotSelect = document.getElementById("slot-select");
+    const API_BASE_URL = 'http://localhost:5000';
     const token = localStorage.getItem("token");
-
-    const API_BASE_URL = window.location.hostname === 'localhost' 
-        ? 'http://localhost:3000' 
-        : window.location.origin;
 
     async function loadStudentSlots() {
         try {
@@ -339,16 +531,16 @@
             const data = await res.json();
             const slots = data.slot || [];
 
-            slotSelect.innerHTML = `<option value="">-- Select Slot --</option>`;
+            const mainSlotSelect = document.getElementById("main-slot-select");
+            mainSlotSelect.innerHTML = `<option value="">-- Select Main Slot --</option>`;
 
             slots.forEach(slot => {
                 const option = document.createElement("option");
                 option.value = slot;
                 option.textContent = slot;
-                slotSelect.appendChild(option);
+                mainSlotSelect.appendChild(option);
             });
 
-            
             checkIfAllowed();
 
         } catch (err) {
@@ -372,7 +564,7 @@
 
         // redirect options 
         const loginPaths = [
-            "login.html"
+            "index.html"
         ];
 
         // redirect to the first matching one
@@ -389,7 +581,7 @@
         // ============ logout ============
 
         setTimeout(() => {
-            window.location.href = "login.html";
+            window.location.href = "index.html";
         }, 1000);
     }
 </script>
@@ -398,18 +590,19 @@
     const markBtn = document.getElementById("mark-attendance-btn");
 
     async function checkIfAllowed() {
-        const selectedSlot = document.getElementById('slot-select').value;
+        const selectedMainSlot = document.getElementById('main-slot-select').value;
+        const selectedIndividualSlot = document.getElementById('individual-slot-select').value;
         const messageDiv = document.getElementById('attendance-message');
         messageDiv.textContent = "";
 
-        if (!selectedSlot) {
-            showMessage("Please select a slot.", "error");
+        if (!selectedMainSlot || !selectedIndividualSlot) {
+            showMessage("Please select both main slot and individual slot.", "error");
             markBtn.disabled = true;
             return;
         }
 
         if (!("geolocation" in navigator)) {
-            showMessage(" Geolocation not supported.", "error");
+            showMessage("Geolocation not supported.", "error");
             markBtn.disabled = true;
             return;
         }
@@ -425,7 +618,12 @@
                         "Content-Type": "application/json",
                         Authorization: `Bearer ${localStorage.getItem("token")}`,
                     },
-                    body: JSON.stringify({ latitude, longitude, slot: selectedSlot }),
+                    body: JSON.stringify({ 
+                        mainSlot: selectedMainSlot,
+                        individualSlot: selectedIndividualSlot,
+                        latitude, 
+                        longitude 
+                    }),
                 });
 
                 const data = await res.json();
@@ -439,45 +637,49 @@
                 }
 
             } catch (err) {
-                showMessage(" Error validating attendance permission.", "error");
+                showMessage("Error validating attendance permission.", "error");
                 markBtn.disabled = true;
             }
         }, (error) => {
-            showMessage(" Unable to access your location.", "error");
+            showMessage("Unable to access your location.", "error");
             markBtn.disabled = true;
         });
     }
 
-    
-    slotSelect.addEventListener("change", checkIfAllowed);
+    // Add event listeners for both slot selects
+    document.getElementById('main-slot-select')?.addEventListener("change", checkIfAllowed);
+    document.getElementById('individual-slot-select')?.addEventListener("change", checkIfAllowed);
 </script>
 
 <script>
+    let pendingAttendanceData = null;
 
-    // ============ Re-check when slot changes ============
-
-    document.getElementById("slot-select")?.addEventListener("change", checkIfAllowed);
-</script>
-
-<script>
     async function markAttendance() {
-        const selectedSlot = document.getElementById('slot-select').value;
-        if (!selectedSlot) {
-            showMessage("Please select a slot.", "error");
+        const selectedMainSlot = document.getElementById('main-slot-select').value;
+        const selectedIndividualSlot = document.getElementById('individual-slot-select').value;
+        
+        if (!selectedMainSlot || !selectedIndividualSlot) {
+            showMessage("Please select both main slot and individual slot.", "error");
             return;
         }
+
         navigator.geolocation.getCurrentPosition(async (position) => {
             const latitude = position.coords.latitude;
             const longitude = position.coords.longitude;
 
-            // ============ Validate location ============
+            // Validate location
             const locationRes = await fetch(`${API_BASE_URL}/student/validate-location`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 },
-                body: JSON.stringify({ slot: selectedSlot, latitude, longitude })
+                body: JSON.stringify({ 
+                    mainSlot: selectedMainSlot,
+                    individualSlot: selectedIndividualSlot,
+                    latitude, 
+                    longitude 
+                })
             });
             const locationData = await locationRes.json();
 
@@ -486,24 +688,26 @@
                 return;
             }
 
-            // ============ Mark attendance ============
+            // Directly mark attendance (no OTP)
             const res = await fetch(`${API_BASE_URL}/student/mark-attendance`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    Authorization: `Bearer ${localStorage.getItem('token')}`
                 },
-                body: JSON.stringify({ slot: selectedSlot })
+                body: JSON.stringify({
+                    mainSlot: selectedMainSlot,
+                    individualSlot: selectedIndividualSlot
+                })
             });
             const data = await res.json();
-
             if (res.ok) {
-                showMessage("Attendance marked successfully!", "success");
+                showMessage('Attendance marked successfully!', 'success');
             } else {
-                showMessage(data.message || "Failed to mark attendance", "error");
+                showMessage(data.message || 'Failed to mark attendance', 'error');
             }
         }, (error) => {
-            showMessage(" Unable to access your location.", "error");
+            showMessage("Unable to access your location.", "error");
         });
     }
 
@@ -514,8 +718,6 @@
         el.style.display = "block";
     }
 
-    // console.log("Selected Slot:", selectedSlot);
-    // console.log("Current Location:", { latitude: currentLatitude, longitude: currentLongitude });
 
     console.log("Token:", localStorage.getItem('token'));
 </script>
@@ -523,15 +725,19 @@
 <script>
     async function viewAttendanceHistory() {
         const modal = document.getElementById('history-modal');
-        modal.style.display = 'flex';
         const content = document.getElementById('history-content');
+        const selectedMainSlot = document.getElementById('main-slot-select').value;
+
+        if (!selectedMainSlot) {
+            showMessage("Please select a main slot first.", "error");
+            return;
+        }
+
+        modal.style.display = 'flex';
         content.innerHTML = "Loading...";
 
-        // Get selected slot
-        const selectedSlot = document.getElementById('slot-select').value;
-
         try {
-            const res = await fetch(`${API_BASE_URL}/student/attendance-history?slot=${encodeURIComponent(selectedSlot)}`, {
+            const res = await fetch(`${API_BASE_URL}/student/attendance-history?mainSlot=${encodeURIComponent(selectedMainSlot)}`, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
@@ -544,13 +750,29 @@
                 return;
             }
 
-            let html = `<table style="width:100%; border-collapse:collapse;">
-                <tr><th>Date</th><th>Status</th></tr>`;
-            data.history.forEach(item => {
-                html += `<tr>
-                    <td>${item.date}</td>
-                    <td style="color:${item.status === 'Present' ? 'green' : 'red'};">${item.status}</td>
-                </tr>`;
+            // Sort by date in descending order and take last 10 records
+            const sortedHistory = data.history
+                .sort((a, b) => new Date(b.date) - new Date(a.date))
+                .slice(0, 10);
+
+            let html = `
+                <h4 style="margin-bottom: 15px; color: #0072ff;">Last 10 Attendance Records</h4>
+                <table style="width:100%; border-collapse:collapse; margin-top: 10px;">
+                    <tr style="background: #f5f5f5;">
+                        <th style="padding: 8px; text-align: left;">Date</th>
+                        <th style="padding: 8px; text-align: left;">Slot</th>
+                        <th style="padding: 8px; text-align: left;">Status</th>
+                    </tr>`;
+
+            sortedHistory.forEach(item => {
+                html += `
+                    <tr style="border-bottom: 1px solid #eee;">
+                        <td style="padding: 8px;">${new Date(item.date).toLocaleDateString()}</td>
+                        <td style="padding: 8px;">${item.individualSlot}</td>
+                        <td style="padding: 8px; color:${item.status === 'Present' ? '#4caf50' : '#f44336'};">
+                            ${item.status}
+                        </td>
+                    </tr>`;
             });
             html += "</table>";
             content.innerHTML = html;
@@ -566,13 +788,140 @@
 
 <script>
     if (!localStorage.getItem('token')) {
-        window.location.href = 'login.html';
+        window.location.href = 'index.html';
     }
 </script>
 
+<script>
+    // Add this new function to handle main slot change
+    function handleMainSlotChange() {
+        const mainSlot = document.getElementById("main-slot-select").value;
+        const individualSlotSelect = document.getElementById("individual-slot-select");
+        
+        // Clear existing options
+        individualSlotSelect.innerHTML = '<option value="">-- Select Individual Slot --</option>';
+        
+        if (mainSlot) {
+            // Split the main slot into individual slots
+            let individualSlots = mainSlot.split(/[\+\-]/).map(s => s.trim()).filter(Boolean);
+            
+            // Add each individual slot as an option
+            individualSlots.forEach(slot => {
+                const option = document.createElement("option");
+                option.value = slot;
+                option.textContent = slot;
+                individualSlotSelect.appendChild(option);
+            });
+        }
+    }
+</script>
 
+<script>
+    // Add these new functions for password change
+    function showChangePasswordModal() {
+        document.getElementById('change-password-modal').style.display = 'flex';
+    }
 
+    function hideChangePasswordModal() {
+        document.getElementById('change-password-modal').style.display = 'none';
+        // Clear the form
+        document.getElementById('currentPassword').value = '';
+        document.getElementById('newPassword').value = '';
+        document.getElementById('confirmPassword').value = '';
+        document.getElementById('password-message').textContent = '';
+    }
 
+    async function changePassword() {
+        const currentPassword = document.getElementById('currentPassword').value;
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        const messageDiv = document.getElementById('password-message');
 
+        // Validate inputs
+        if (!currentPassword || !newPassword || !confirmPassword) {
+            messageDiv.textContent = 'Please fill in all fields';
+            messageDiv.style.color = '#ff4f4f';
+            return;
+        }
+
+        if (newPassword !== confirmPassword) {
+            messageDiv.textContent = 'New passwords do not match';
+            messageDiv.style.color = '#ff4f4f';
+            return;
+        }
+
+        if (newPassword.length < 6) {
+            messageDiv.textContent = 'New password must be at least 6 characters long';
+            messageDiv.style.color = '#ff4f4f';
+            return;
+        }
+
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/login.html';
+                return;
+            }
+
+            const response = await fetch(`${API_BASE_URL}/student/change-password`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    currentPassword,
+                    newPassword
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                messageDiv.textContent = 'Password changed successfully!';
+                messageDiv.style.color = '#4CAF50';
+                // Clear the form
+                document.getElementById('currentPassword').value = '';
+                document.getElementById('newPassword').value = '';
+                document.getElementById('confirmPassword').value = '';
+                // Hide modal after 2 seconds
+                setTimeout(hideChangePasswordModal, 2000);
+            } else {
+                messageDiv.textContent = data.message || 'Failed to change password';
+                messageDiv.style.color = '#ff4f4f';
+            }
+        } catch (error) {
+            messageDiv.textContent = 'An error occurred. Please try again.';
+            messageDiv.style.color = '#ff4f4f';
+        }
+    }
+</script>
+
+<script>
+    // Add this new function for password visibility toggle
+    function togglePasswordVisibility(inputId) {
+        const input = document.getElementById(inputId);
+        const icon = input.nextElementSibling;
+        
+        if (input.type === "password") {
+            input.type = "text";
+            icon.classList.remove("fa-eye");
+            icon.classList.add("fa-eye-slash");
+        } else {
+            input.type = "password";
+            icon.classList.remove("fa-eye-slash");
+            icon.classList.add("fa-eye");
+        }
+    }
+</script>
+
+<script>
+    function openDevModal() {
+        document.getElementById('dev-modal-overlay').style.display = 'flex';
+    }
+    function closeDevModal() {
+        document.getElementById('dev-modal-overlay').style.display = 'none';
+    }
+</script>
 
 </html>

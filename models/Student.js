@@ -4,9 +4,10 @@ const studentSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   regNo: { type: String, required: true, unique: true },
-  password: { type: String, required: true }, // Hashed regNo
+  password: { type: String, required: true }, 
   slot: [{ type: String, required: true }],
-  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Link to teacher
+  archivedSlots: [{ type: String, default: [] }], 
+  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, 
 });
 
 module.exports = mongoose.model('Student', studentSchema);

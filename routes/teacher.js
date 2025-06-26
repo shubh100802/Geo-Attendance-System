@@ -58,6 +58,7 @@ router.post('/add-student', verifyToken, async (req, res) => {
       regNo,
       password: hashedPassword,
       slot: [slot],
+      archivedSlots: [],
       createdBy: req.userId,
     });
 
@@ -105,6 +106,7 @@ router.post('/upload-students', verifyToken, upload.single('file'), async (req, 
         regNo: RegNo,
         password: hashedPassword,
         slot: Slot.split("+"),
+        archivedSlots: [],
         createdBy: req.userId 
       }).save();
     }
@@ -126,6 +128,8 @@ router.get('/students', verifyToken, async (req, res) => {
     const filter = { createdBy: req.userId }; 
     if (slot) {
       filter.slot = slot;
+      // Exclude students who have this slot in archivedSlots
+      filter.archivedSlots = { $ne: slot };
     }
     const students = await Student.find(filter).select("-password"); 
     res.json(students);
@@ -141,8 +145,14 @@ router.get('/students', verifyToken, async (req, res) => {
 router.get('/slots', verifyToken, async (req, res) => {
   try {
     // Get distinct slots only for students created by this teacher
-    const slots = await Student.distinct("slot", { createdBy: req.userId });
-    res.json(slots);
+    // Exclude slots that are archived
+    const allSlots = await Student.distinct("slot", { createdBy: req.userId });
+    const archivedSlots = await Student.distinct("archivedSlots", { createdBy: req.userId });
+    
+    // Filter out archived slots from active slots
+    const activeSlots = allSlots.filter(slot => !archivedSlots.includes(slot));
+    
+    res.json(activeSlots);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Failed to fetch slots' });
@@ -150,13 +160,28 @@ router.get('/slots', verifyToken, async (req, res) => {
 });
 
 
-// ============= Delete one student =============
-
-router.delete('/students/:regNo', async (req, res) => {
+// ============= Delete one student from a slot =============
+router.delete('/students/:regNo', verifyToken, async (req, res) => {
   try {
     const regNo = req.params.regNo;
-    await Student.deleteOne({ regNo });
-    res.json({ message: 'Student deleted successfully' });
+    const slot = req.query.slot;
+    if (!slot) {
+      return res.status(400).json({ message: 'Slot is required to remove student from a slot.' });
+    }
+    const student = await Student.findOne({ regNo, createdBy: req.userId });
+    if (!student) {
+      return res.status(404).json({ message: 'Student not found' });
+    }
+    // Remove the slot from the student's slot array
+    student.slot = student.slot.filter(s => s !== slot);
+    // If no slots remain, delete the student
+    if (student.slot.length === 0) {
+      await Student.deleteOne({ regNo, createdBy: req.userId });
+      return res.json({ message: `Student deleted completely (no slots left)` });
+    } else {
+      await student.save();
+      return res.json({ message: `Student removed from slot ${slot}` });
+    }
   } catch (err) {
     console.error(' Error deleting student:', err);
     res.status(500).json({ message: 'Server error while deleting student' });
@@ -185,11 +210,15 @@ router.delete('/slots/:slot', verifyToken, async (req, res) => {
 // ============= Attendance Setup Setting =============
 
 router.post('/attendance-settings', verifyToken, async (req, res) => {
-  const { radius, startTime, endTime, latitude, longitude, slot } = req.body;
+  const { radius, startTime, endTime, latitude, longitude, mainSlot, individualSlot } = req.body;
   const createdBy = req.userId;
 
   try {
-    const existing = await AttendanceSetting.findOne({ createdBy, slot });
+    const existing = await AttendanceSetting.findOne({ 
+      createdBy, 
+      mainSlot,
+      individualSlot 
+    });
 
     if (existing) {
       existing.radius = radius;
@@ -209,7 +238,8 @@ router.post('/attendance-settings', verifyToken, async (req, res) => {
         endTime,
         latitude,
         longitude,
-        slot,
+        mainSlot,
+        individualSlot,
         createdBy,
         deleteAt
       });
@@ -217,7 +247,7 @@ router.post('/attendance-settings', verifyToken, async (req, res) => {
 
     res.status(200).json({ message: "✅ Attendance settings saved!" });
   } catch (err) {
-    console.error(" Error saving settings:", err);
+    console.error("Error saving settings:", err);
     res.status(500).json({ message: "Server error while saving settings" });
   }
 });
@@ -227,18 +257,28 @@ router.post('/attendance-settings', verifyToken, async (req, res) => {
 
 // ============ GET /teacher/download-attendance ============
 
-router.get("/download-attendance", async (req, res) => {
+router.get("/download-attendance", verifyToken, async (req, res) => {
   try {
-    const slot = req.query.slot;
-    const type = req.query.type; // "present" or "absent"
+    const { mainSlot, individualSlot, type } = req.query; // type is "present" or "absent"
     const dateString = new Date().toISOString().split("T")[0];
 
-    if (!slot || !type) {
-      return res.status(400).json({ message: "Slot and type are required" });
+    if (!mainSlot || !individualSlot || !type) {
+      return res.status(400).json({ message: "Main slot, individual slot, and type are required" });
     }
 
-    const attendance = await Attendance.findOne({ slot, date: dateString });
-    const students = await Student.find({ slot });
+    // Find attendance record for the specified date and individual slot
+    const attendance = await Attendance.findOne({ 
+      mainSlot,
+      individualSlot,
+      date: dateString,
+      createdBy: req.userId
+    });
+
+    // Get all students in this main slot
+    const students = await Student.find({ 
+      slot: { $in: [mainSlot] },
+      createdBy: req.userId
+    }).sort({ name: 1 });
 
     let dataToExport = [];
 
@@ -250,7 +290,8 @@ router.get("/download-attendance", async (req, res) => {
           Name: s.name,
           Email: s.email,
           RegNo: s.regNo,
-          Slot: s.slot,
+          MainSlot: mainSlot,
+          IndividualSlot: individualSlot,
           Date: dateString,
           Status: "Present",
         }));
@@ -262,7 +303,8 @@ router.get("/download-attendance", async (req, res) => {
           Name: s.name,
           Email: s.email,
           RegNo: s.regNo,
-          Slot: s.slot,
+          MainSlot: mainSlot,
+          IndividualSlot: individualSlot,
           Date: dateString,
           Status: "Absent",
         }));
@@ -279,16 +321,241 @@ router.get("/download-attendance", async (req, res) => {
 
     res.setHeader(
       "Content-Disposition",
-      `attachment; filename=${slot}_${type}_${dateString}.xlsx`
+      `attachment; filename=${mainSlot}_${individualSlot}_${type}_${dateString}.xlsx`
     );
     res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     res.send(buffer);
+
   } catch (err) {
-    console.error(" Download attendance error:", err);
+    console.error("Download attendance error:", err);
     res.status(500).json({ message: "Failed to download attendance" });
   }
 });
 
+// ============ POST /teacher/archive-slot/:slot ============
 
+router.post('/archive-slot/:slot', verifyToken, async (req, res) => {
+  try {
+    const slot = decodeURIComponent(req.params.slot);
+    
+    // Find all students created by this teacher who have this slot
+    const students = await Student.find({ 
+      slot: { $in: [slot] },
+      createdBy: req.userId 
+    });
+
+    if (students.length === 0) {
+      return res.status(404).json({ message: `No students found in slot ${slot}` });
+    }
+
+    // Archive the slot for each student
+    for (const student of students) {
+      // Add slot to archivedSlots if not already there
+      if (!student.archivedSlots.includes(slot)) {
+        student.archivedSlots.push(slot);
+      }
+      // Remove slot from active slots
+      student.slot = student.slot.filter(s => s !== slot);
+      await student.save();
+    }
+
+    res.json({ message: `Slot ${slot} archived successfully for ${students.length} students` });
+  } catch (err) {
+    console.error('Error archiving slot:', err);
+    res.status(500).json({ message: 'Server error while archiving slot' });
+  }
+});
+
+// ============ GET /teacher/archived-slots ============
+
+router.get('/archived-slots', verifyToken, async (req, res) => {
+  try {
+    // Get distinct archived slots only for students created by this teacher
+    const archivedSlots = await Student.distinct("archivedSlots", { 
+      createdBy: req.userId,
+      archivedSlots: { $exists: true, $ne: [] }
+    });
+    res.json(archivedSlots);
+  } catch (err) {
+    console.error('Error fetching archived slots:', err);
+    res.status(500).json({ message: 'Failed to fetch archived slots' });
+  }
+});
+
+// ============ GET /teacher/archived-students ============
+
+router.get('/archived-students', verifyToken, async (req, res) => {
+  try {
+    const slot = req.query.slot;
+    const filter = { 
+      createdBy: req.userId,
+      archivedSlots: { $exists: true, $ne: [] }
+    };
+    
+    if (slot) {
+      filter.archivedSlots = slot;
+    }
+    
+    const students = await Student.find(filter).select("-password");
+    res.json(students);
+  } catch (err) {
+    console.error('Error fetching archived students:', err);
+    res.status(500).json({ message: 'Server error while fetching archived students' });
+  }
+});
+
+// ============ POST /teacher/unarchive-student/:regNo ============
+
+router.post('/unarchive-student/:regNo', verifyToken, async (req, res) => {
+  try {
+    const regNo = req.params.regNo;
+    const { slot } = req.body; // Optional slot parameter
+    
+    const student = await Student.findOne({ 
+      regNo: regNo,
+      createdBy: req.userId 
+    });
+
+    if (!student) {
+      return res.status(404).json({ message: 'Student not found' });
+    }
+
+    if (student.archivedSlots.length === 0) {
+      return res.status(400).json({ message: 'Student has no archived slots' });
+    }
+
+    if (slot) {
+      // Unarchive specific slot
+      if (!student.archivedSlots.includes(slot)) {
+        return res.status(400).json({ message: `Slot ${slot} is not archived for this student` });
+      }
+      
+      // Move specific slot from archived to active
+      student.archivedSlots = student.archivedSlots.filter(s => s !== slot);
+      student.slot.push(slot);
+    } else {
+      // Unarchive all slots
+      student.slot = [...student.slot, ...student.archivedSlots];
+      student.archivedSlots = [];
+    }
+    
+    await student.save();
+
+    const action = slot ? `Slot ${slot} unarchived` : 'All slots unarchived';
+    res.json({ message: `Student ${student.name} - ${action} successfully` });
+  } catch (err) {
+    console.error('Error unarchiving student:', err);
+    res.status(500).json({ message: 'Server error while unarchiving student' });
+  }
+});
+
+// ============= GET /teacher/attendance-report =============
+
+router.get('/attendance-report', verifyToken, async (req, res) => {
+    const { mainSlot, individualSlot, date } = req.query;
+    const createdBy = req.userId;
+
+    if (!mainSlot || !individualSlot || !date) {
+        return res.status(400).json({ message: 'Main slot, individual slot, and date are required.' });
+    }
+
+    try {
+        const filter = { createdBy, mainSlot, individualSlot, date };
+
+        const attendanceRecord = await Attendance.findOne(filter);
+        const allStudents = await Student.find({ createdBy, slot: mainSlot });
+
+        if (!allStudents || allStudents.length === 0) {
+            return res.status(404).json({ message: 'No students found for this slot.' });
+        }
+
+        const presentRegNos = attendanceRecord ? attendanceRecord.present : [];
+        const reportData = allStudents.map(student => ({
+            'Registration Number': student.regNo,
+            'Name': student.name,
+            'Status': presentRegNos.includes(student.regNo) ? 'Present' : 'Absent'
+        }));
+
+        const worksheet = xlsx.utils.json_to_sheet(reportData);
+        const workbook = xlsx.utils.book_new();
+        xlsx.utils.book_append_sheet(workbook, worksheet, 'Attendance');
+
+        const buffer = xlsx.write(workbook, { bookType: 'xlsx', type: 'buffer' });
+
+        res.setHeader('Content-Disposition', `attachment; filename="Attendance-${mainSlot}-${individualSlot}-${date}.xlsx"`);
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.send(buffer);
+
+    } catch (err) {
+        console.error('Error generating attendance report:', err);
+        res.status(500).json({ message: 'Server error while generating report.' });
+    }
+});
+
+// ============= Get today's attendance =============
+
+router.get('/today-attendance', verifyToken, async (req, res) => {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const attendance = await Attendance.findOne({ date: today, createdBy: req.userId });
+
+    if (!attendance) {
+      return res.status(404).json({ message: 'No attendance record found for today' });
+    }
+
+    const presentRegNos = attendance.present;
+    const students = await Student.find({ createdBy: req.userId, regNo: { $in: presentRegNos } }).select('-password');
+
+    const reportData = students.map(student => ({
+      'Registration Number': student.regNo,
+      'Name': student.name,
+      'Status': 'Present'
+    }));
+
+    const worksheet = xlsx.utils.json_to_sheet(reportData);
+    const workbook = xlsx.utils.book_new();
+    xlsx.utils.book_append_sheet(workbook, worksheet, 'Today\'s Attendance');
+
+    const buffer = xlsx.write(workbook, { bookType: 'xlsx', type: 'buffer' });
+
+    res.setHeader('Content-Disposition', `attachment; filename="Today's-Attendance-${today}.xlsx"`);
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.send(buffer);
+  } catch (err) {
+    console.error('Error fetching today\'s attendance:', err);
+    res.status(500).json({ message: 'Server error while fetching today\'s attendance' });
+  }
+});
+
+// ============= LIVE ATTENDANCE COUNT =============
+router.get('/attendance-live-count', verifyToken, async (req, res) => {
+  try {
+    const { mainSlot, individualSlot } = req.query;
+    if (!mainSlot || !individualSlot) {
+      return res.status(400).json({ message: 'mainSlot and individualSlot are required.' });
+    }
+    const today = new Date().toISOString().split('T')[0];
+    // Get all students in this slot
+    const students = await Student.find({
+      slot: { $in: [mainSlot] },
+      createdBy: req.userId
+    });
+    const total = students.length;
+    // Get today's attendance record
+    const attendance = await Attendance.findOne({
+      mainSlot,
+      individualSlot,
+      date: today,
+      createdBy: req.userId
+    });
+    const presentRegNos = attendance ? attendance.present : [];
+    const present = presentRegNos.length;
+    const absent = total - present;
+    res.json({ total, present, absent });
+  } catch (err) {
+    console.error('Error fetching live attendance count:', err);
+    res.status(500).json({ message: 'Server error while fetching live attendance count.' });
+  }
+});
 
 module.exports = router;
