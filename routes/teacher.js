@@ -543,8 +543,8 @@ router.get('/attendance-live-count', verifyToken, async (req, res) => {
     const total = students.length;
     // Get today's attendance record
     const attendance = await Attendance.findOne({
-      mainSlot,
-      individualSlot,
+    mainSlot,
+    individualSlot,
       date: today,
       createdBy: req.userId
     });

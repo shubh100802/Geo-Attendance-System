@@ -244,7 +244,14 @@
 </head>
 
 <script>
-  const API_BASE_URL = 'http://localhost:5000';
+  function getApiBaseUrl() {
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      return 'http://localhost:5000';
+    } else {
+      return 'https://geo-attendance-system.onrender.com';
+    }
+  }
+  const API_BASE_URL = getApiBaseUrl();
 
   let isLocationCaptured = false;
 
@@ -582,7 +589,10 @@
     <h4><i class="fas fa-user-friends dev-icon"></i> Developers</h4>
     <ul>
       <li><strong>Shubham Raj Sharma (22BCY10200)</strong> <span class="dev-role">Full Stack Developer</span> (<a href="mailto:shubhamraj100802@gmail.com">Email</a>, <a href="https://www.linkedin.com/in/shubhamraj100802/" target="_blank">LinkedIn</a>)</li>
-      <li><strong>Dr. Sajjad Ahmed Sir</strong> <span class="dev-role">Project Guide</span></li>
+    </ul>
+    <h4 style="color:#00c6ff; margin-top:18px; margin-bottom:8px;"><i class="fas fa-user-tie dev-icon"></i> Faculty Mentor</h4>
+    <ul>
+      <li><strong style="color:#0072ff;">Dr. Sajjad Ahmed Sir</strong></li>
     </ul>
     <h4><i class="fas fa-cogs dev-icon"></i> Tech Stack</h4>
     <ul class="dev-stack">
@@ -1302,6 +1312,17 @@
     fetchLiveCount();
     liveCountInterval = setInterval(fetchLiveCount, 2000);
   }
+</script>
+
+<script>
+  // Tab switching/blocking
+  document.addEventListener('visibilitychange', function() {
+    if (document.hidden) {
+      alert('Tab switching is not allowed! You will be logged out.');
+      localStorage.clear();
+      window.location.href = 'index.html';
+    }
+  });
 </script>
 
 </body>
