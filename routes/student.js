@@ -5,7 +5,7 @@ const Student = require('../models/Student');
 const jwt = require('jsonwebtoken');
 const Attendance = require('../models/Attendance');
 const verifyToken = require('../middleware/auth');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 
 const nowIST = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
 
@@ -25,21 +25,35 @@ function authenticateToken(req, res, next) {
   }
 }
 
+// ============ GET /student/test ============
+router.get('/test', (req, res) => {
+  res.json({ 
+    message: "Student API is working", 
+    timestamp: new Date().toISOString(),
+    timezone: new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' })
+  });
+});
+
 // ============ POST /student/validate-location ============
 router.post('/validate-location', authenticateToken, async (req, res) => {
   try {
     const { latitude, longitude, mainSlot, individualSlot } = req.body;
     console.log("Received body:", req.body);
+    console.log("User ID:", req.userId);
 
     if (!latitude || !longitude || !mainSlot || !individualSlot) {
+      console.log("Missing data:", { latitude, longitude, mainSlot, individualSlot });
       return res.status(400).json({ allowed: false, message: "Missing data" });
     }
 
     // Find student to get who their teacher is
     const student = await Student.findById(req.userId);
     if (!student) {
+      console.log("Student not found for ID:", req.userId);
       return res.status(404).json({ allowed: false, message: "Student not found" });
     }
+
+    console.log("Student found:", { regNo: student.regNo, createdBy: student.createdBy });
 
     // Now find attendance settings set by *that teacher*
     const setting = await AttendanceSetting.findOne({ 
@@ -48,7 +62,10 @@ router.post('/validate-location', authenticateToken, async (req, res) => {
       individualSlot 
     });
 
+    console.log("Attendance setting found:", setting ? "Yes" : "No");
+
     if (!setting || !setting.latitude || !setting.longitude || !setting.radius) {
+      console.log("No valid attendance settings found");
       return res.status(400).json({ allowed: false, message: "Teacher has not set attendance location yet." });
     }
 
@@ -66,6 +83,14 @@ router.post('/validate-location', authenticateToken, async (req, res) => {
       (currentHour > startHour || (currentHour === startHour && currentMinute >= startMinute)) &&
       (currentHour < endHour || (currentHour === endHour && currentMinute <= endMinute))
     );
+    
+    console.log("Time check:", {
+      currentTime: currentTime.toLocaleString(),
+      startTime: setting.startTime,
+      endTime: setting.endTime,
+      isWithinTimeWindow
+    });
+    
     if (!isWithinTimeWindow) {
       return res.json({ allowed: false, message: `Attendance can only be marked between ${setting.startTime} and ${setting.endTime}` });
     }
@@ -112,19 +137,25 @@ router.get('/my-slot', authenticateToken, async (req, res) => {
 router.post('/mark-attendance', authenticateToken, async (req, res) => {
   try {
     const { mainSlot, individualSlot } = req.body;
+    console.log("Mark attendance request:", { mainSlot, individualSlot, userId: req.userId });
+    
     // Convert current time to IST (UTC+5:30)
     const currentTime = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
     const currentDate = currentTime.toISOString().split('T')[0];
 
     if (!mainSlot || !individualSlot) {
+      console.log("Missing mainSlot or individualSlot");
       return res.status(400).json({ message: "Main slot and individual slot are required" });
     }
 
     // Get student details
     const student = await Student.findById(req.userId);
     if (!student) {
+      console.log("Student not found for mark attendance:", req.userId);
       return res.status(404).json({ message: "Student not found" });
     }
+
+    console.log("Student found for attendance:", { regNo: student.regNo, createdBy: student.createdBy });
 
     // Get attendance settings
     const setting = await AttendanceSetting.findOne({ 
@@ -134,8 +165,11 @@ router.post('/mark-attendance', authenticateToken, async (req, res) => {
     });
 
     if (!setting) {
+      console.log("No attendance settings found for:", { mainSlot, individualSlot, createdBy: student.createdBy });
       return res.status(400).json({ message: "Attendance settings not found for this slot" });
     }
+
+    console.log("Attendance settings found:", { startTime: setting.startTime, endTime: setting.endTime });
 
     // Check if current time is within allowed window
     const [startHour, startMinute] = setting.startTime.split(':').map(Number);
@@ -148,6 +182,13 @@ router.post('/mark-attendance', authenticateToken, async (req, res) => {
       (currentHour > startHour || (currentHour === startHour && currentMinute >= startMinute)) &&
       (currentHour < endHour || (currentHour === endHour && currentMinute <= endMinute))
     );
+
+    console.log("Time window check:", {
+      currentTime: currentTime.toLocaleString(),
+      startTime: setting.startTime,
+      endTime: setting.endTime,
+      isWithinTimeWindow
+    });
 
     if (!isWithinTimeWindow) {
       return res.status(400).json({ 
@@ -242,7 +283,7 @@ router.get('/attendance-history', authenticateToken, async (req, res) => {
 
 // ============ POST /student/change-password ============
 
-router.post("/change-password", verifyToken, async (req, res) => {
+router.post("/change-password", authenticateToken, async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
     const studentId = req.userId;
@@ -275,7 +316,7 @@ router.post("/change-password", verifyToken, async (req, res) => {
 });
 
 // ============ GET /student/attendance-time-window ============
-router.get('/attendance-time-window', verifyToken, async (req, res) => {
+router.get('/attendance-time-window', authenticateToken, async (req, res) => {
   try {
     const { mainSlot, individualSlot } = req.query;
 
@@ -309,7 +350,5 @@ router.get('/attendance-time-window', verifyToken, async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
-
-router.use(authenticateToken); 
 
 module.exports = router;

@@ -561,7 +561,18 @@
 
 
     // Run after DOM loads
-    document.addEventListener("DOMContentLoaded", loadStudentSlots);
+    document.addEventListener("DOMContentLoaded", async () => {
+        // Test API connectivity first
+        try {
+            const testRes = await fetch(`${API_BASE_URL}/student/test`);
+            const testData = await testRes.json();
+            console.log("API test response:", testData);
+        } catch (err) {
+            console.error("API test failed:", err);
+        }
+        
+        loadStudentSlots();
+    });
 </script>
 
 
@@ -642,11 +653,12 @@
                     showMessage("You are allowed to mark attendance.", "success");
                     markBtn.disabled = false;
                 } else {
-                    showMessage("You are not allowed to mark attendance.", "error");
+                    showMessage(data.message || "You are not allowed to mark attendance.", "error");
                     markBtn.disabled = true;
                 }
 
             } catch (err) {
+                console.error("Error validating location:", err);
                 showMessage("Error validating attendance permission.", "error");
                 markBtn.disabled = true;
             }
@@ -668,6 +680,8 @@
         const selectedMainSlot = document.getElementById('main-slot-select').value;
         const selectedIndividualSlot = document.getElementById('individual-slot-select').value;
         
+        console.log("Marking attendance for:", { selectedMainSlot, selectedIndividualSlot });
+        
         if (!selectedMainSlot || !selectedIndividualSlot) {
             showMessage("Please select both main slot and individual slot.", "error");
             return;
@@ -676,47 +690,62 @@
         navigator.geolocation.getCurrentPosition(async (position) => {
             const latitude = position.coords.latitude;
             const longitude = position.coords.longitude;
+            
+            console.log("Location obtained:", { latitude, longitude });
 
-            // Validate location
-            const locationRes = await fetch(`${API_BASE_URL}/student/validate-location`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
-                body: JSON.stringify({ 
-                    mainSlot: selectedMainSlot,
-                    individualSlot: selectedIndividualSlot,
-                    latitude, 
-                    longitude 
-                })
-            });
-            const locationData = await locationRes.json();
+            try {
+                // Validate location
+                const locationRes = await fetch(`${API_BASE_URL}/student/validate-location`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({ 
+                        mainSlot: selectedMainSlot,
+                        individualSlot: selectedIndividualSlot,
+                        latitude, 
+                        longitude 
+                    })
+                });
+                
+                console.log("Location validation response status:", locationRes.status);
+                const locationData = await locationRes.json();
+                console.log("Location validation data:", locationData);
 
-            if (!locationData.allowed) {
-                showMessage("You are not in the allowed location", "error");
-                return;
-            }
+                if (!locationData.allowed) {
+                    showMessage(locationData.message || "You are not in the allowed location", "error");
+                    return;
+                }
 
-            // Directly mark attendance (no OTP)
-            const res = await fetch(`${API_BASE_URL}/student/mark-attendance`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${localStorage.getItem('token')}`
-                },
-                body: JSON.stringify({
-                    mainSlot: selectedMainSlot,
-                    individualSlot: selectedIndividualSlot
-                })
-            });
-            const data = await res.json();
-            if (res.ok) {
-                showMessage('Attendance marked successfully!', 'success');
-            } else {
-                showMessage(data.message || 'Failed to mark attendance', 'error');
+                // Directly mark attendance (no OTP)
+                const res = await fetch(`${API_BASE_URL}/student/mark-attendance`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({
+                        mainSlot: selectedMainSlot,
+                        individualSlot: selectedIndividualSlot
+                    })
+                });
+                
+                console.log("Mark attendance response status:", res.status);
+                const data = await res.json();
+                console.log("Mark attendance data:", data);
+                
+                if (res.ok) {
+                    showMessage('Attendance marked successfully!', 'success');
+                } else {
+                    showMessage(data.message || 'Failed to mark attendance', 'error');
+                }
+            } catch (error) {
+                console.error("Error in markAttendance:", error);
+                showMessage("Error marking attendance. Please try again.", "error");
             }
         }, (error) => {
+            console.error("Geolocation error:", error);
             showMessage("Unable to access your location.", "error");
         });
     }

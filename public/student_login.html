@@ -316,8 +316,8 @@ document.addEventListener('DOMContentLoaded', function() {
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
       return 'http://localhost:5000';
     } else {
-      // Use same origin for deployed
-      return window.location.origin;
+      // Use the actual deployment URL
+      return 'https://geo-attendance-system.onrender.com';
     }
   }
 
