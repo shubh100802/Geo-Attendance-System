@@ -343,7 +343,3 @@ For any feedback or support:
 ---
 
 **Built with ❤️ for Educational Institutions**
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details. 
