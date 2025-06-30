@@ -768,18 +768,32 @@
 
   //  ============ To upload xl ============ //
 
+  // Add spinner HTML
+  const spinner = document.createElement('div');
+  spinner.id = 'upload-spinner';
+  spinner.style.cssText = `
+    display: none;
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(0,0,0,0.4);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+  `;
+  spinner.innerHTML = `<div style="background: #fff; color: #0072ff; padding: 32px 40px; border-radius: 16px; font-size: 1.3em; box-shadow: 0 8px 32px rgba(0,0,0,0.18); display: flex; align-items: center;"><i class='fas fa-spinner fa-spin' style='font-size:2em; margin-right:18px;'></i>Uploading file, please wait...</div>`;
+  document.body.appendChild(spinner);
+
+  // Update uploadExcel to show/hide spinner
   async function uploadExcel() {
     const fileInput = document.getElementById("excelFileInput");
     const file = fileInput.files[0];
-
     if (!file) {
       alert("Please select an Excel (.xlsx) file first.");
       return;
     }
-
     const formData = new FormData();
     formData.append("file", file);
-
+    spinner.style.display = 'flex'; // Show spinner
     try {
       const res = await fetch(`${API_BASE_URL}/teacher/upload-students`, {
         method: "POST",
@@ -788,17 +802,22 @@
         },
         body: formData,
       });
-
-      const data = await res.json();
-
+      let data = {};
+      try {
+        data = await res.json();
+      } catch (e) {
+        // If response is not JSON, ignore
+      }
       if (res.ok) {
         alert(" Students uploaded successfully!");
       } else {
-        alert(data.message || "Failed to upload students");
+        alert((data && data.message) || "Failed to upload students");
       }
     } catch (err) {
-      console.error(err);
       alert("Something went wrong during upload.");
+      console.error(err);
+    } finally {
+      spinner.style.display = 'none'; // Always hide spinner
     }
   }
 </script>
@@ -872,14 +891,14 @@
         </thead>
         <tbody>`;
       students.forEach((stu, index) => {
-        const activeSlots = Array.isArray(stu.slot) ? stu.slot.join(", ") : stu.slot || "None";
+        const activeSlot = stu.mainSlot || "None";
         const archivedSlots = Array.isArray(stu.archivedSlots) ? stu.archivedSlots.join(", ") : stu.archivedSlots || "None";
         
         tableHtml += `<tr style="border-bottom:1px solid #ffffff22;">
           <td style="padding: 12px 8px; vertical-align: middle;">${stu.regNo}</td>
           <td style="padding: 12px 8px; vertical-align: middle; word-wrap: break-word;">${stu.name}</td>
           <td style="padding: 12px 8px; vertical-align: middle; word-wrap: break-word;">${stu.email}</td>
-          <td style="padding: 12px 8px; vertical-align: middle; word-wrap: break-word;">${activeSlots}</td>
+          <td style="padding: 12px 8px; vertical-align: middle; word-wrap: break-word;">${activeSlot}</td>
           <td style="padding: 12px 8px; vertical-align: middle; word-wrap: break-word;">${archivedSlots}</td>
           <td style="padding: 12px 8px; vertical-align: middle;"><button onclick=\"deleteStudent('${stu.regNo}')\">Delete</button></td>
         </tr>`;
@@ -1039,14 +1058,14 @@
         </thead>
         <tbody>`;
       students.forEach((stu, index) => {
-        const activeSlots = Array.isArray(stu.slot) ? stu.slot.join(", ") : stu.slot || "None";
+        const activeSlot = stu.mainSlot || "None";
         const archivedSlots = Array.isArray(stu.archivedSlots) ? stu.archivedSlots.join(", ") : stu.archivedSlots || "None";
         
         tableHtml += `<tr style="border-bottom:1px solid #ffffff22;">
           <td style="padding: 12px 8px; vertical-align: middle;">${stu.regNo}</td>
           <td style="padding: 12px 8px; vertical-align: middle; word-wrap: break-word;">${stu.name}</td>
           <td style="padding: 12px 8px; vertical-align: middle; word-wrap: break-word;">${stu.email}</td>
-          <td style="padding: 12px 8px; vertical-align: middle; word-wrap: break-word;">${activeSlots}</td>
+          <td style="padding: 12px 8px; vertical-align: middle; word-wrap: break-word;">${activeSlot}</td>
           <td style="padding: 12px 8px; vertical-align: middle; word-wrap: break-word;">${archivedSlots}</td>
           <td style="padding: 12px 8px; vertical-align: middle;"><button onclick=\"unarchiveStudent('${stu.regNo}')\" style="background: linear-gradient(to right, #4caf50, #45a049);">Unarchive</button></td>
         </tr>`;
@@ -1312,17 +1331,6 @@
     fetchLiveCount();
     liveCountInterval = setInterval(fetchLiveCount, 2000);
   }
-</script>
-
-<script>
-  // Tab switching/blocking
-  document.addEventListener('visibilitychange', function() {
-    if (document.hidden) {
-      alert('Tab switching is not allowed! You will be logged out.');
-      localStorage.clear();
-      window.location.href = 'index.html';
-    }
-  });
 </script>
 
 </body>

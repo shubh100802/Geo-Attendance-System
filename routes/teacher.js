@@ -25,43 +25,27 @@ router.post('/add-student', verifyToken, async (req, res) => {
   const { name, email, regNo, slot } = req.body;
 
   try {
-
     const existing = await Student.findOne({ email });
-
     if (existing) {
-      let currentSlots = [];
-
-      if (Array.isArray(existing.slot)) {
-        currentSlots = existing.slot;
-      } else if (typeof existing.slot === "string") {
-        currentSlots = [existing.slot];
-      }
-
       // Prevent duplicate
-      if (!currentSlots.includes(slot)) {
-        // Reassign fully as array
-        existing.set("slot", [...currentSlots, slot]);
-        existing.markModified("slot"); 
-        await existing.save();
-        return res.status(200).json({ message: `Student already exists. Slot "${slot}" added.` });
-      } else {
+      if (existing.mainSlot === slot) {
         return res.status(409).json({ message: "Student already exists in this slot." });
+      } else {
+        // Optionally, allow adding another mainSlot for the same email (not typical)
+        return res.status(409).json({ message: "Student already exists with a different slot." });
       }
     }
 
-
     const hashedPassword = await bcrypt.hash(regNo, 10);
-
     const newStudent = new Student({
       name,
       email,
       regNo,
       password: hashedPassword,
-      slot: [slot],
+      mainSlot: slot,
       archivedSlots: [],
       createdBy: req.userId,
     });
-
     await newStudent.save();
     res.status(201).json({ message: 'Student added successfully' });
   } catch (err) {
@@ -90,29 +74,23 @@ router.post('/upload-students', verifyToken, upload.single('file'), async (req, 
 
     for (const student of students) {
       const { Name, Email, RegNo, Slot } = student;
-
       // Skip if any field is missing
       if (!Name || !Email || !RegNo || !Slot) continue;
-
       // Skip if student already exists
       const exists = await Student.findOne({ $or: [{ email: Email }, { regNo: RegNo }] });
       if (exists) continue;
-
       const hashedPassword = await bcrypt.hash(RegNo, 10);
-
       await new Student({
         name: Name,
         email: Email,
         regNo: RegNo,
         password: hashedPassword,
-        slot: Slot.split("+"),
+        mainSlot: Slot, // Store as mainSlot string
         archivedSlots: [],
         createdBy: req.userId 
       }).save();
     }
-
     res.status(201).json({ message: "Students uploaded successfully!" });
-
   } catch (err) {
     console.error("Error in /upload-students:", err);
     res.status(500).json({ message: "Server error during Excel upload" });
@@ -124,14 +102,14 @@ router.post('/upload-students', verifyToken, upload.single('file'), async (req, 
 
 router.get('/students', verifyToken, async (req, res) => {
   try {
-    const slot = req.query.slot;
-    const filter = { createdBy: req.userId }; 
-    if (slot) {
-      filter.slot = slot;
+    const mainSlot = req.query.slot;
+    const filter = { createdBy: req.userId };
+    if (mainSlot) {
+      filter.mainSlot = mainSlot;
       // Exclude students who have this slot in archivedSlots
-      filter.archivedSlots = { $ne: slot };
+      filter.archivedSlots = { $ne: mainSlot };
     }
-    const students = await Student.find(filter).select("-password"); 
+    const students = await Student.find(filter).select("-password");
     res.json(students);
   } catch (err) {
     console.error(err);
@@ -144,14 +122,12 @@ router.get('/students', verifyToken, async (req, res) => {
 
 router.get('/slots', verifyToken, async (req, res) => {
   try {
-    // Get distinct slots only for students created by this teacher
+    // Get distinct mainSlots only for students created by this teacher
     // Exclude slots that are archived
-    const allSlots = await Student.distinct("slot", { createdBy: req.userId });
+    const allSlots = await Student.distinct("mainSlot", { createdBy: req.userId });
     const archivedSlots = await Student.distinct("archivedSlots", { createdBy: req.userId });
-    
     // Filter out archived slots from active slots
     const activeSlots = allSlots.filter(slot => !archivedSlots.includes(slot));
-    
     res.json(activeSlots);
   } catch (err) {
     console.error(err);
@@ -196,7 +172,7 @@ router.delete('/slots/:slot', verifyToken, async (req, res) => {
     const slot = decodeURIComponent(req.params.slot);
     // Only delete students created by this teacher
     await Student.deleteMany({ 
-      slot: slot,
+      mainSlot: slot,
       createdBy: req.userId 
     });
     res.json({ message: `All students from slot ${slot} deleted for your account.` });
@@ -276,7 +252,7 @@ router.get("/download-attendance", verifyToken, async (req, res) => {
 
     // Get all students in this main slot
     const students = await Student.find({ 
-      slot: { $in: [mainSlot] },
+      mainSlot,
       createdBy: req.userId
     }).sort({ name: 1 });
 
@@ -461,31 +437,24 @@ router.get('/attendance-report', verifyToken, async (req, res) => {
 
     try {
         const filter = { createdBy, mainSlot, individualSlot, date };
-
         const attendanceRecord = await Attendance.findOne(filter);
-        const allStudents = await Student.find({ createdBy, slot: mainSlot });
-
+        const allStudents = await Student.find({ createdBy, mainSlot });
         if (!allStudents || allStudents.length === 0) {
             return res.status(404).json({ message: 'No students found for this slot.' });
         }
-
         const presentRegNos = attendanceRecord ? attendanceRecord.present : [];
         const reportData = allStudents.map(student => ({
             'Registration Number': student.regNo,
             'Name': student.name,
             'Status': presentRegNos.includes(student.regNo) ? 'Present' : 'Absent'
         }));
-
         const worksheet = xlsx.utils.json_to_sheet(reportData);
         const workbook = xlsx.utils.book_new();
         xlsx.utils.book_append_sheet(workbook, worksheet, 'Attendance');
-
         const buffer = xlsx.write(workbook, { bookType: 'xlsx', type: 'buffer' });
-
         res.setHeader('Content-Disposition', `attachment; filename="Attendance-${mainSlot}-${individualSlot}-${date}.xlsx"`);
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         res.send(buffer);
-
     } catch (err) {
         console.error('Error generating attendance report:', err);
         res.status(500).json({ message: 'Server error while generating report.' });
@@ -535,16 +504,16 @@ router.get('/attendance-live-count', verifyToken, async (req, res) => {
       return res.status(400).json({ message: 'mainSlot and individualSlot are required.' });
     }
     const today = new Date().toISOString().split('T')[0];
-    // Get all students in this slot
+    // Get all students in this main slot
     const students = await Student.find({
-      slot: { $in: [mainSlot] },
+      mainSlot,
       createdBy: req.userId
     });
     const total = students.length;
     // Get today's attendance record
     const attendance = await Attendance.findOne({
-    mainSlot,
-    individualSlot,
+      mainSlot,
+      individualSlot,
       date: today,
       createdBy: req.userId
     });

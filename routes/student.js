@@ -129,7 +129,8 @@ router.post('/validate-location', authenticateToken, async (req, res) => {
 router.get('/my-slot', authenticateToken, async (req, res) => {
   const student = await Student.findById(req.userId);
   if (!student) return res.status(404).json({ message: "Student not found" });
-  res.json({ slot: student.slot });
+  // Return mainSlot as an array for compatibility with frontend
+  res.json({ slot: [student.mainSlot] });
 });
 
 
