@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Waiting Room</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="/public/css/styles.css" rel="stylesheet"> <!-- Your existing stylesheet -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f0f4f8; /* Light blue-gray background */
+        }
+        .waiting-card {
+            background-color: #ffffff;
+            border-radius: 1rem; /* Rounded corners */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 2.5rem;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            animation: fadeIn 0.8s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #3b82f6; /* Tailwind blue-500 */
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 1.5rem auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="waiting-card">
+        <h1 class="text-4xl font-extrabold text-gray-900 mb-4">Welcome to the Waiting Room!</h1>
+        <p class="text-lg text-gray-700 mb-6">
+            Our site is currently experiencing high traffic. Please wait, and we'll get you in as soon as possible!
+        </p>
+        <div class="spinner"></div>
+        <p class="text-xl font-semibold text-blue-600 mb-2" id="queuePosition">
+            Your position in queue: Loading...
+        </p>
+        <p class="text-md text-gray-600 mb-6" id="estimatedWait">
+            Estimated wait time: Calculating...
+        </p>
+        <p class="text-sm text-gray-500">
+            Please do not close this page. You will be automatically redirected.
+        </p>
+        <button id="leaveQueueBtn" class="mt-8 px-6 py-3 bg-red-500 text-white font-bold rounded-lg shadow hover:bg-red-600 transition duration-300 ease-in-out">
+            Leave Queue
+        </button>
+    </div>
+
+    <script>
+        const queuePositionElement = document.getElementById('queuePosition');
+        const estimatedWaitElement = document.getElementById('estimatedWait');
+        const leaveQueueBtn = document.getElementById('leaveQueueBtn');
+
+        // Function to get cookie value
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return null;
+        }
+
+        let queueId = getCookie('queue_id'); 
+        console.log('Initial queueId from cookie:', queueId); 
+
+        async function updateQueueStatus() {
+            queueId = getCookie('queue_id'); 
+            console.log('Fetching status - Current queueId:', queueId); 
+
+            if (!queueId) {
+                queuePositionElement.textContent = "Status: Not in queue or admitted.";
+                estimatedWaitElement.textContent = "Attempting to redirect...";
+                clearInterval(pollInterval); // Stop polling
+                setTimeout(() => {
+                    window.location.href = window.location.origin + '/'; // Redirect to main page if queueId is lost
+                }, 1000);
+                return; 
+            }
+
+            try {
+                const url = `/queue-status?queueId=${queueId}`; 
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (response.ok) {
+                    if (data.status === 'ready') {
+                        queuePositionElement.textContent = "You're up next!";
+                        estimatedWaitElement.textContent = "Redirecting...";
+                        clearInterval(pollInterval); // Stop polling
+                        setTimeout(() => {
+                            window.location.href = window.location.origin + '/'; // Redirect to main page
+                        }, 1000);
+                    } else if (data.status === 'waiting') {
+                        queuePositionElement.textContent = `Your position in queue: ${data.position}`;
+                        estimatedWaitElement.textContent = `Estimated wait time: ${data.estimatedWaitMinutes} minutes`;
+                    } else { // status === 'not_in_queue' or other unexpected status
+                        queuePositionElement.textContent = `Status: ${data.message || 'Not in queue.'}`;
+                        estimatedWaitElement.textContent = "Please try accessing the main site again.";
+                        document.cookie = 'queue_id=; Max-Age=0; path=/;'; 
+                        clearInterval(pollInterval);
+                        setTimeout(() => {
+                            window.location.href = window.location.origin + '/'; 
+                        }, 1000);
+                    }
+                } else {
+                    queuePositionElement.textContent = `Error: ${data.message || 'Could not fetch status.'}`;
+                    estimatedWaitElement.textContent = "";
+                }
+            } catch (error) {
+                console.error('Error fetching queue status:', error);
+                queuePositionElement.textContent = "Error connecting to server.";
+                estimatedWaitElement.textContent = "Please check your connection.";
+            }
+        }
+
+        const pollInterval = setInterval(updateQueueStatus, 5000);
+        updateQueueStatus();
+
+        leaveQueueBtn.addEventListener('click', async () => {
+            queueId = getCookie('queue_id'); 
+            console.log('Leaving queue - Current queueId:', queueId); 
+
+            if (!queueId) {
+                alert('Cannot leave queue: Queue ID not found in cookie. You might have already left or been admitted. Redirecting to main page.');
+                window.location.href = window.location.origin + '/'; 
+                return; 
+            }
+
+            if (confirm('Are you sure you want to leave the queue? You will lose your spot.')) {
+                try {
+                    const response = await fetch('/queue/leave', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ queueId: queueId }) 
+                    });
+                    const data = await response.json();
+                    if (response.ok) {
+                        alert(data.message);
+                        clearInterval(pollInterval); // Stop polling
+                        document.cookie = 'queue_id=; Max-Age=0; path=/;'; 
+                        
+                        window.location.href = window.location.origin + '/public/thank-you.html'; 
+                        
+                    } else {
+                        alert(`Failed to leave queue: ${data.message || 'Server error'}`);
+                    }
+                } catch (error) {
+                    console.error('Error leaving queue:', error);
+                    alert('An error occurred while trying to leave the queue.');
+                }
+            }
+        });
+
+        // NEW: Send a beacon when the page is about to unload
+        window.addEventListener('beforeunload', () => {
+            const currentQueueId = getCookie('queue_id');
+            if (currentQueueId && navigator.sendBeacon) {
+                // Send a non-blocking POST request
+                const data = JSON.stringify({ queueId: currentQueueId });
+                navigator.sendBeacon('/queue/signal-departure', new Blob([data], { type: 'application/json' }));
+                console.log('Sent departure beacon for:', currentQueueId);
+            }
+        });
+    </script>
+</body>
+</html>
