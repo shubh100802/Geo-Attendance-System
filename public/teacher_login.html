@@ -354,7 +354,13 @@ document.addEventListener('DOMContentLoaded', function() {
           localStorage.setItem('token', data.token);
           localStorage.setItem('role', data.role);
           localStorage.setItem('name', data.name);
-          window.location.href = 'teacher-dashboard.html';
+          
+          // --- START: Queue Cleanup for Internal Navigation ---
+          isNavigatingInternally = true; // Set flag
+          window.removeEventListener('beforeunload', handleBeforeUnload); // Remove listener
+          // --- END: Queue Cleanup for Internal Navigation ---
+
+          window.location.href = 'teacher-dashboard.html'; // Redirect
         } else {
           alert(data.message || 'Login failed');
         }
@@ -363,5 +369,39 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error(err);
       }
     });
+
+  // Global flag to indicate internal navigation
+let isNavigatingInternally = false;
+
+// Function to get cookie value
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return null;
+}
+
+// Handler for beforeunload event
+const handleBeforeUnload = () => {
+    if (!isNavigatingInternally) {
+        const currentQueueId = getCookie('queue_id');
+        if (currentQueueId && navigator.sendBeacon) {
+            const data = JSON.stringify({ queueId: currentQueueId });
+            navigator.sendBeacon('/queue/signal-departure', new Blob([data], { type: 'application/json' }));
+        }
+    }
+};
+
+// Add the event listener
+window.addEventListener('beforeunload', handleBeforeUnload);
+
+// General click listener for internal links
+document.addEventListener('click', function(e) {
+    if (e.target.tagName === 'A' && e.target.href.startsWith(window.location.origin)) {
+        isNavigatingInternally = true;
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+    }
+});
+
   </script>
 </html>
