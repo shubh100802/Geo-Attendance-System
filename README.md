@@ -342,4 +342,4 @@ For any feedback or support:
 
 ---
 
-**Built with ❤️ for Educational Institutions**
+**Built with ❤️ for Educational Institutions By Shubh**
