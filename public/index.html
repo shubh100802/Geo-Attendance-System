@@ -98,6 +98,34 @@
 </footer>
 
 <script>
+// Global flag to indicate internal navigation (declared once)
+let isNavigatingInternally = false;
+
+// Function to get cookie value (declared once)
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return null;
+}
+
+// Handler for beforeunload event (declared once)
+const handleBeforeUnload = () => {
+    if (!isNavigatingInternally) {
+        const currentQueueId = getCookie('queue_id');
+        if (currentQueueId && navigator.sendBeacon) {
+            const data = JSON.stringify({ queueId: currentQueueId });
+            navigator.sendBeacon('/queue/signal-departure', new Blob([data], { type: 'application/json' }));
+            console.log('Sent departure beacon for:', currentQueueId);
+        }
+    } else {
+        console.log('Internal navigation detected, not sending departure beacon.');
+    }
+};
+
+// Add the event listener (called once)
+window.addEventListener('beforeunload', handleBeforeUnload);
+
 // Browser detection utility
 function detectBrowser() {
   const userAgent = navigator.userAgent;
@@ -224,12 +252,24 @@ document.addEventListener('DOMContentLoaded', function() {
   showChromeOnlyMessage();
 });
 
-// Override link clicks to check browser first
+// Override link clicks to check browser first and set internal navigation flag
 document.addEventListener('click', function(e) {
-  if (e.target.tagName === 'A' && (e.target.href.includes('student_login.html') || e.target.href.includes('teacher_login.html'))) {
-    e.preventDefault();
-    if (showChromeOnlyMessage()) {
-      window.location.href = e.target.href;
+  // Check if the clicked element is an <a> tag and its href is an internal path
+  if (e.target.tagName === 'A' && e.target.href.startsWith(window.location.origin)) {
+    // Check if it's one of the login links
+    if (e.target.href.includes('student_login.html') || e.target.href.includes('teacher_login.html')) {
+        e.preventDefault(); // Prevent default navigation for browser check
+        if (showChromeOnlyMessage()) {
+            isNavigatingInternally = true; // Set flag for internal navigation
+            window.removeEventListener('beforeunload', handleBeforeUnload); // Remove listener
+            console.log('Internal link clicked. Removed beforeunload listener.');
+            window.location.href = e.target.href; // Proceed with navigation
+        }
+    } else {
+        // For other internal links not requiring browser check (e.g., if you add more later)
+        isNavigatingInternally = true;
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+        console.log('Internal link clicked (non-login). Removed beforeunload listener.');
     }
   }
 });
